@@ -22,7 +22,7 @@ export function DemoOverview() {
           </h1>
           <p className="mt-2 text-lg font-medium text-indigo-700">{demoCandidate.headline}</p>
           <p className="mt-4 max-w-2xl leading-7 text-slate-600">{demoCandidate.summary}</p>
-          <Link href="/demo/profile" className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
+          <Link href="/demo/profile?tour=start" className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
             Start guided walkthrough
           </Link>
         </div>

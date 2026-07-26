@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { DemoTour } from "@/components/workspace/demo-tour";
 import type { WorkspaceMode } from "@/domain/workspace";
 
 const navigation = [
@@ -83,13 +84,22 @@ export function AppShell({
             })}
           </nav>
           {workspaceMode === "demo" ? (
-            <button
-              type="button"
-              onClick={() => void exitWorkspace()}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-            >
-              Exit demo
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={restartDemoTour}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50"
+              >
+                Restart tour
+              </button>
+              <button
+                type="button"
+                onClick={() => void exitWorkspace()}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                Exit demo
+              </button>
+            </>
           ) : (
             <button
               type="button"
@@ -104,6 +114,7 @@ export function AppShell({
       </header>
       ) : null}
       <div className="flex-1">{children}</div>
+      {workspaceMode === "demo" ? <DemoTour /> : null}
       {workspaceMode ? <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6 lg:px-8">
           <span>Waypoint · Personal AI-assisted career intelligence</span>
@@ -126,4 +137,8 @@ async function exitWorkspace() {
 async function signOut() {
   await fetch("/api/auth/logout", { method: "POST" });
   window.location.assign("/");
+}
+
+function restartDemoTour() {
+  window.dispatchEvent(new Event("waypoint:restart-demo-tour"));
 }
