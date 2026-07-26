@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { demoCandidate } from "@/demo/fixtures/candidate";
 
 export function DemoOverview() {
@@ -20,9 +22,9 @@ export function DemoOverview() {
           </h1>
           <p className="mt-2 text-lg font-medium text-indigo-700">{demoCandidate.headline}</p>
           <p className="mt-4 max-w-2xl leading-7 text-slate-600">{demoCandidate.summary}</p>
-          <button type="button" className="mt-6 min-h-11 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
+          <Link href="/demo/profile" className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
             Start guided walkthrough
-          </button>
+          </Link>
         </div>
         <aside className="rounded-2xl border border-slate-200 bg-white p-6">
           <p className="text-sm font-semibold text-slate-950">Demo safety</p>

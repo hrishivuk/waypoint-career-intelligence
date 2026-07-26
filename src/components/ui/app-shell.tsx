@@ -15,6 +15,15 @@ const navigation = [
   { href: "/jobs/new", label: "Job analysis" },
 ] as const;
 
+const demoNavigation = [
+  { href: "/", label: "Demo overview", exact: true },
+  { href: "/demo/profile", label: "Profile" },
+  { href: "/demo/knowledge", label: "Knowledge" },
+  { href: "/demo/cvs", label: "CVs" },
+  { href: "/demo/jobs", label: "Job analysis" },
+  { href: "/demo/application-kit", label: "Application Kit" },
+] as const;
+
 export function AppShell({
   children,
   workspaceMode,
@@ -48,11 +57,11 @@ export function AppShell({
               Career intelligence
             </span>
           </Link>
-          {workspaceMode === "personal" ? <nav
+          <nav
             aria-label="Primary navigation"
             className="-mx-1 flex items-center gap-1 overflow-x-auto px-1"
           >
-            {navigation.map((item) => {
+            {(workspaceMode === "demo" ? demoNavigation : navigation).map((item) => {
               const active = "exact" in item && item.exact
                 ? pathname === item.href
                 : pathname.startsWith(item.href);
@@ -71,7 +80,8 @@ export function AppShell({
                 </Link>
               );
             })}
-          </nav> : (
+          </nav>
+          {workspaceMode === "demo" ? (
             <button
               type="button"
               onClick={() => void exitWorkspace()}
@@ -79,7 +89,7 @@ export function AppShell({
             >
               Exit demo
             </button>
-          )}
+          ) : null}
         </div>
       </header>
       ) : null}

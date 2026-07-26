@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { demoCandidate } from "./candidate";
+import { demoWorkspace } from "./workspace";
 
 describe("public demo fixtures", () => {
   it("contain the fictional identity and no known personal-source markers", () => {
-    const serialized = JSON.stringify(demoCandidate).toLowerCase();
+    const serialized = JSON.stringify(demoWorkspace).toLowerCase();
     expect(demoCandidate.name).toBe("Jordan Lee");
     for (const forbidden of [
       "hrishikesh",
