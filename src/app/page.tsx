@@ -1,12 +1,18 @@
 import Link from "next/link";
 
 import { buttonStyles, PageContainer } from "@/components/ui";
+import { DemoOverview } from "@/components/workspace/demo-overview";
+import { WorkspaceGateway } from "@/components/workspace/workspace-gateway";
 import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { getWorkspaceMode } from "@/infrastructure/workspace/server-workspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const mode = await getWorkspaceMode();
+  if (!mode) return <WorkspaceGateway />;
+  if (mode === "demo") return <DemoOverview />;
   const actor = await new FixedPrototypeIdentityProvider().getActor();
   const client = getSupabaseServerClient();
   const [profile, projects, cvs, analyses] = await Promise.all([
