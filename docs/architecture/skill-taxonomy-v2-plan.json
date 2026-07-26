@@ -1,0 +1,70 @@
+{
+  "schema_version": "waypoint-skill-taxonomy-plan-v2",
+  "status": "proposed",
+  "merges": [
+    {
+      "canonical_name": "CSS",
+      "members": ["CSS", "CSS3"],
+      "aliases": ["CSS3"]
+    },
+    {
+      "canonical_name": "Responsive Interface Development",
+      "members": [
+        "Responsive UI implementation",
+        "Responsive Web Development"
+      ],
+      "aliases": [
+        "Responsive UI implementation",
+        "Responsive Web Development"
+      ]
+    }
+  ],
+  "renames": [
+    {
+      "from": "HTML5",
+      "to": "HTML",
+      "preserve_as_alias": true
+    },
+    {
+      "from": "REST APIs",
+      "to": "REST API Integration",
+      "preserve_as_alias": true
+    }
+  ],
+  "reclassifications": [
+    {
+      "name": "Agile (Scrum)",
+      "category": "methodology"
+    },
+    {
+      "name": "Cross-functional Collaboration",
+      "destination": "professional_competency"
+    },
+    {
+      "name": "Code Reviews",
+      "destination": "professional_competency"
+    },
+    {
+      "name": "Feature Development",
+      "destination": "professional_competency",
+      "canonical_name": "Independent Feature Delivery"
+    },
+    {
+      "name": "Technical Documentation",
+      "destination": "professional_competency"
+    },
+    {
+      "name": "Backend concepts",
+      "action": "supersede_after_specific_backend_skills_are_confirmed"
+    }
+  ],
+  "blocked_assessments": [
+    {
+      "skill": "Angular",
+      "proposed_level": "strong",
+      "reason": "Conflicts with the user's direct statement that Angular is not a strong skill."
+    }
+  ],
+  "insufficient_evidence": ["Local LLM Integration"]
+}
+

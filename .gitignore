@@ -1,0 +1,53 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# Private career handover source material (keep only public-safe fixtures/docs)
+/docs/handover/v1/
+/docs/handover/v1.1/*
+!/docs/handover/v1.1/example-handover.md
+!/docs/handover/v1.1/specification.md
+!/docs/handover/v1.1/importer-design.md
+!/docs/handover/v1.1/projection-design.md
+
+# Private development handover containing local document references
+/docs/project-handover/

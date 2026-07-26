@@ -1,0 +1,45 @@
+{
+  "name": "ai-career-finder",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "import:handover": "vite-node --script scripts/stage-handover.ts",
+    "project:handover": "vite-node --script scripts/project-reviewed-handover.ts",
+    "plan:skill-taxonomy": "vite-node --script scripts/plan-skill-taxonomy-v2.ts",
+    "stage:skill-review": "vite-node --script scripts/stage-skill-review-v2.ts",
+    "validate:skill-model": "vite-node --script scripts/validate-skill-model-v2.ts",
+    "audit:matching-knowledge": "vite-node --script scripts/audit-matching-knowledge.ts"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "mammoth": "^1.12.0",
+    "next": "16.2.11",
+    "openai": "^6.49.0",
+    "pdfjs-dist": "^4.10.38",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitest/coverage-v8": "^3.2.4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.11",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "vitest": "^3.2.4"
+  }
+}

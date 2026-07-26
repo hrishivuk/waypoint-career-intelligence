@@ -1,0 +1,50 @@
+import "server-only";
+
+import { z } from "zod";
+
+const optionalServerEnvSchema = z.object({
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  OPENAI_MODEL: z.string().min(1).optional(),
+  AI_PROVIDER: z.enum(["openai", "groq"]).default("openai"),
+  GROQ_API_KEY: z.string().min(1).optional(),
+  GROQ_MODEL: z.string().min(1).optional(),
+  SUPABASE_URL: z.url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  PROTOTYPE_USER_ID: z
+    .uuid()
+    .default("00000000-0000-4000-8000-000000000001"),
+});
+
+export type ServerEnv = z.infer<typeof optionalServerEnvSchema>;
+
+let cachedEnv: ServerEnv | undefined;
+
+export function getServerEnv(): ServerEnv {
+  cachedEnv ??= optionalServerEnvSchema.parse({
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_MODEL: process.env.OPENAI_MODEL,
+    AI_PROVIDER: process.env.AI_PROVIDER,
+    GROQ_API_KEY: process.env.GROQ_API_KEY,
+    GROQ_MODEL: process.env.GROQ_MODEL,
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    PROTOTYPE_USER_ID: process.env.PROTOTYPE_USER_ID,
+  });
+
+  return cachedEnv;
+}
+
+export function getConfiguredServices() {
+  const env = getServerEnv();
+
+  return {
+    openai: Boolean(env.OPENAI_API_KEY && env.OPENAI_MODEL),
+    groq: Boolean(env.GROQ_API_KEY),
+    selectedAiProvider: env.AI_PROVIDER,
+    selectedAiConfigured:
+      env.AI_PROVIDER === "groq"
+        ? Boolean(env.GROQ_API_KEY)
+        : Boolean(env.OPENAI_API_KEY && env.OPENAI_MODEL),
+    supabase: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+  };
+}
