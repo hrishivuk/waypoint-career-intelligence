@@ -10,6 +10,8 @@ const optionalServerEnvSchema = z.object({
   GROQ_MODEL: z.string().min(1).optional(),
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
   PROTOTYPE_USER_ID: z
     .uuid()
     .default("00000000-0000-4000-8000-000000000001"),
@@ -28,6 +30,9 @@ export function getServerEnv(): ServerEnv {
     GROQ_MODEL: process.env.GROQ_MODEL,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     PROTOTYPE_USER_ID: process.env.PROTOTYPE_USER_ID,
   });
 
@@ -46,5 +51,9 @@ export function getConfiguredServices() {
         ? Boolean(env.GROQ_API_KEY)
         : Boolean(env.OPENAI_API_KEY && env.OPENAI_MODEL),
     supabase: Boolean(env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+    supabaseAuth: Boolean(
+      (env.NEXT_PUBLIC_SUPABASE_URL || env.SUPABASE_URL) &&
+        env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    ),
   };
 }

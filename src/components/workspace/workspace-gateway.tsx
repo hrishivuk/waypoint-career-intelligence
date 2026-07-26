@@ -7,6 +7,10 @@ export function WorkspaceGateway() {
   const [error, setError] = useState<string | null>(null);
 
   async function choose(mode: "personal" | "demo") {
+    if (mode === "personal") {
+      window.location.assign("/login");
+      return;
+    }
     setBusy(mode);
     setError(null);
     try {

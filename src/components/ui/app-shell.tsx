@@ -57,6 +57,7 @@ export function AppShell({
               Career intelligence
             </span>
           </Link>
+          <div className="flex min-w-0 items-center gap-2">
           <nav
             aria-label="Primary navigation"
             className="-mx-1 flex items-center gap-1 overflow-x-auto px-1"
@@ -89,7 +90,16 @@ export function AppShell({
             >
               Exit demo
             </button>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              Sign out
+            </button>
+          )}
+          </div>
         </div>
       </header>
       ) : null}
@@ -110,5 +120,10 @@ async function exitWorkspace() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ mode: null }),
   });
+  window.location.assign("/");
+}
+
+async function signOut() {
+  await fetch("/api/auth/logout", { method: "POST" });
   window.location.assign("/");
 }

@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 const personalToDemo: Record<string, string> = {
@@ -8,7 +9,7 @@ const personalToDemo: Record<string, string> = {
   "/application-kit": "/demo/application-kit",
 };
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const mode = request.cookies.get("waypoint_workspace")?.value;
   const path = request.nextUrl.pathname;
 
@@ -25,7 +26,35 @@ export function proxy(request: NextRequest) {
     )?.[1];
     return NextResponse.redirect(new URL(destination ?? "/", request.url));
   }
-  return NextResponse.next();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    return process.env.NODE_ENV === "production"
+      ? NextResponse.redirect(new URL("/login", request.url))
+      : NextResponse.next();
+  }
+
+  let response = NextResponse.next({ request });
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        for (const cookie of cookiesToSet) {
+          request.cookies.set(cookie.name, cookie.value);
+        }
+        response = NextResponse.next({ request });
+        for (const cookie of cookiesToSet) {
+          response.cookies.set(cookie.name, cookie.value, cookie.options);
+        }
+      },
+    },
+  });
+  const { data } = await supabase.auth.getUser();
+  return data.user
+    ? response
+    : NextResponse.redirect(new URL("/login", request.url));
 }
 
 export const config = {
@@ -38,4 +67,3 @@ export const config = {
     "/demo/:path*",
   ],
 };
-
