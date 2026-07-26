@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const STORAGE_KEY = "waypoint_demo_tour";
 
@@ -20,6 +20,7 @@ export function DemoTour() {
   const searchParams = useSearchParams();
   const [active, setActive] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const primaryActionRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const requested = searchParams.get("tour") === "start";
@@ -62,9 +63,21 @@ export function DemoTour() {
     const element = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`);
     if (!element) return;
     const classes = ["relative", "z-20", "ring-4", "ring-indigo-400", "ring-offset-4", "transition-shadow"];
+    const competingActions = element.querySelectorAll<HTMLElement>("[data-tour-competing-action]");
     element.classList.add(...classes);
+    for (const action of competingActions) {
+      action.classList.add("invisible");
+      action.setAttribute("aria-hidden", "true");
+    }
     element.scrollIntoView({ behavior: "smooth", block: "center" });
-    return () => element.classList.remove(...classes);
+    primaryActionRef.current?.focus();
+    return () => {
+      element.classList.remove(...classes);
+      for (const action of competingActions) {
+        action.classList.remove("invisible");
+        action.removeAttribute("aria-hidden");
+      }
+    };
   }, [active, pathname, step]);
 
   if (!active || pathname !== step.path) return null;
@@ -97,7 +110,7 @@ export function DemoTour() {
         <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>
         <div className="mt-5 flex items-center justify-between gap-3">
           <button type="button" disabled={stepIndex === 0} onClick={() => move(stepIndex - 1)} className="min-h-10 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:invisible">Back</button>
-          <button type="button" onClick={() => (last ? close() : move(stepIndex + 1))} className="min-h-10 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{last ? "Finish tour" : "Next"}</button>
+          <button ref={primaryActionRef} type="button" onClick={() => (last ? close() : move(stepIndex + 1))} className="min-h-10 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">{last ? "Finish tour" : "Next"}</button>
         </div>
       </aside>
     </>

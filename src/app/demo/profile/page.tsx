@@ -18,7 +18,7 @@ export default function DemoProfilePage() {
           defaultValue={demoWorkspace.candidate.sampleNarrative}
         />
         <div className="mt-4 flex justify-end">
-          <Link href="/demo/knowledge" className="inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
+          <Link data-tour-competing-action href="/demo/knowledge" className="inline-flex min-h-11 items-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white">
             Continue to prepared review
           </Link>
         </div>
