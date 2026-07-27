@@ -116,7 +116,9 @@ export class SupabaseHandoverReviewRepository
 }
 
 class SupabaseHandoverReviewDataClient implements HandoverReviewDataClient {
-  private readonly client = getSupabaseServerClient();
+  private get client() {
+    return getSupabaseServerClient();
+  }
 
   async findActiveRun(candidateId: string): Promise<ImportRunRow | null> {
     const { data, error } = await this.client
