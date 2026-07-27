@@ -97,9 +97,7 @@ export class SupabaseHandoverProjectionRepository
 class SupabaseHandoverProjectionDataClient
   implements HandoverProjectionDataClient
 {
-  private get client() {
-    return getSupabaseServerClient();
-  }
+  private readonly client = getSupabaseServerClient();
 
   async findActiveRun(candidateId: string): Promise<ImportRunRow | null> {
     const { data, error } = await this.client

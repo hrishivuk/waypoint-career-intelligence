@@ -14,10 +14,7 @@ export default async function Home() {
   if (!mode) {
     return (
       <WorkspaceGateway
-        demoOnly={
-          process.env.PORTFOLIO_DEMO_ONLY === "true" ||
-          !process.env.SUPABASE_URL
-        }
+        demoOnly={process.env.PORTFOLIO_DEMO_ONLY === "true"}
       />
     );
   }
