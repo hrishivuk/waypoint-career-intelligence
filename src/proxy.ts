@@ -9,7 +9,7 @@ const personalToDemo: Record<string, string> = {
   "/application-kit": "/demo/application-kit",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const mode = request.cookies.get("waypoint_workspace")?.value;
   const path = request.nextUrl.pathname;
 
