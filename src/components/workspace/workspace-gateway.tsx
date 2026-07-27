@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function WorkspaceGateway() {
+export function WorkspaceGateway({ demoOnly = false }: { demoOnly?: boolean }) {
   const [busy, setBusy] = useState<"personal" | "demo" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,13 +39,14 @@ export function WorkspaceGateway() {
             Choose how you want to explore Waypoint
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-            Open the private personal workspace or explore a guided,
-            completely fictional demonstration with no external AI calls.
+            {demoOnly
+              ? "Explore a guided, completely fictional demonstration with no external AI calls or access to private career data."
+              : "Open the private personal workspace or explore a guided, completely fictional demonstration with no external AI calls."}
           </p>
         </div>
 
-        <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-2">
-          <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className={`mx-auto mt-10 grid gap-4 ${demoOnly ? "max-w-xl" : "max-w-4xl md:grid-cols-2"}`}>
+          {!demoOnly ? <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <span className="w-fit rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
               Private
             </span>
@@ -62,7 +63,7 @@ export function WorkspaceGateway() {
             >
               {busy === "personal" ? "Opening…" : "Open personal workspace"}
             </button>
-          </article>
+          </article> : null}
 
           <article className="flex flex-col rounded-2xl border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
             <span className="w-fit rounded-full bg-white px-2.5 py-1 text-xs font-medium text-indigo-700">

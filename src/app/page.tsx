@@ -11,7 +11,13 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const mode = await getWorkspaceMode();
-  if (!mode) return <WorkspaceGateway />;
+  if (!mode) {
+    return (
+      <WorkspaceGateway
+        demoOnly={process.env.PORTFOLIO_DEMO_ONLY === "true"}
+      />
+    );
+  }
   if (mode === "demo") return <DemoOverview />;
   const actor = await new FixedPrototypeIdentityProvider().getActor();
   const client = getSupabaseServerClient();
