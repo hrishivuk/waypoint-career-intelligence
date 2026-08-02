@@ -44,6 +44,7 @@ begin
   -- Prefer identity-provider names, then the email local part. Never copy an
   -- entire metadata object into the public schema.
   resolved_display_name := nullif(btrim(coalesce(
+    target_metadata ->> 'display_name',
     target_metadata ->> 'full_name',
     target_metadata ->> 'name',
     target_metadata ->> 'preferred_username',
