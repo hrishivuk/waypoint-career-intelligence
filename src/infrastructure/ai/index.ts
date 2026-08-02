@@ -15,7 +15,6 @@ export {
 export {
   createCareerAiGateway,
   configuredAiProvider,
-  type AiProvider,
 } from "./create-career-ai-gateway";
 export {
   GroqCareerAiGateway,
@@ -44,3 +43,35 @@ export {
   type JobDescriptionParsing,
   type SemanticRequirementMatching,
 } from "./schemas";
+export {
+  AiProviderSchema,
+  ProviderCredentialContextSchema,
+  credentialFingerprint,
+  maskApiKey,
+  type AiProvider,
+  type ProviderCredentialContext,
+  type StoredProviderCredential,
+} from "./provider-credentials";
+export {
+  CredentialEncryptionError,
+  ProviderCredentialCipher,
+  loadCredentialKeyring,
+  type CredentialIdentity,
+  type CredentialKeyring,
+  type EncryptedCredential,
+} from "./credential-crypto";
+export {
+  SafeAiProviderError,
+  classifyProviderError,
+  safeAiErrorMessage,
+  type AiCredentialErrorCode,
+} from "./safe-errors";
+export {
+  UserCredentialRepository,
+  type CredentialSummary,
+} from "./user-credential-repository";
+export {
+  AiCredentialRequiredError,
+  AiConsentRequiredError,
+  createUserCareerAiGateway,
+} from "./create-user-career-ai-gateway";

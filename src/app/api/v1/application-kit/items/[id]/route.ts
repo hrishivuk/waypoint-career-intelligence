@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 const schema = z.object({
@@ -18,7 +18,7 @@ export async function PATCH(
       return Response.json({ error: "Check the answer and try again." }, { status: 400 });
     }
     const { id } = await context.params;
-    const { userId } = await new FixedPrototypeIdentityProvider().getActor();
+    const { userId } = await new SupabaseIdentityProvider().getActor();
     const { data, error } = await getSupabaseServerClient()
       .from("application_kit_items")
       .update({
@@ -38,4 +38,3 @@ export async function PATCH(
     return Response.json({ error: "The answer could not be saved." }, { status: 500 });
   }
 }
-

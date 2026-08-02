@@ -1,4 +1,10 @@
-# Personal Supabase Auth setup
+# Legacy personal Supabase Auth setup
+
+> **Historical document:** this was the setup procedure for the earlier
+> single-profile/private-workspace milestone. It is not valid for the current
+> public multi-user product and should not be used for a new deployment. Follow
+> [Public multi-user deployment](public-deployment.md) instead. The SQL below is
+> retained only to explain how the original profile was linked during migration.
 
 This procedure links one private Supabase Auth account to the existing Waypoint
 profile. Do not commit real credentials or identifiers.
@@ -53,4 +59,3 @@ Verify that:
 - private CVs remain available;
 - signing out returns to workspace selection;
 - demo mode shows Jordan Lee and never displays private records.
-

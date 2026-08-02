@@ -26,13 +26,37 @@ queries must also apply validity, review, and mode scope.
 ## Identity model
 
 Every application record belongs to a row in `prototype_users`. During the
-single-user prototype, server-side code should use one configured
-`prototype_users.id` and the Supabase service role. Never expose the service
-role key to the browser.
+public multi-user rollout, every new `auth.users` row automatically creates and
+links one `prototype_users` row plus neutral `primary-career` and
+`temporary-income` modes. Existing linked identities are preserved and existing
+unlinked prototype identities are not guessed or overwritten. An authenticated
+session can safely retry provisioning with
+`bootstrap_current_waypoint_user()`; it can only bootstrap `auth.uid()`.
 
-For future Supabase Auth support, set `prototype_users.auth_user_id` to the
-corresponding `auth.users.id`. The included RLS policies then permit an
-authenticated browser/server client to access only that user's rows.
+Deleting an Auth user cascades through its linked application identity and all
+owned application rows. Account-deletion code must remove private Storage
+objects first because database foreign keys do not delete Storage objects.
+
+Normal application access should use the authenticated user's request-scoped
+Supabase client so the included RLS policies enforce ownership. Reserve the
+service role for narrow administrative operations and never expose its key to
+the browser.
+
+### AI credentials, onboarding, and usage
+
+`user_ai_provider_credentials` stores only an opaque encrypted secret envelope,
+its encryption-key version, and non-secret masked/fingerprint metadata. Browser
+roles have no table privileges even though owner RLS is enabled as a second
+boundary. Trusted server routes perform credential operations and must return
+only provider, mask, verification state, and timestamps—never
+`encrypted_secret`.
+
+Every application identity also receives a resumable `user_onboarding_state`
+row and conservative `user_usage_limits`. Users can read their own limits and
+UTC daily usage, while only trusted server code can mutate quotas or counters.
+The default public-beta limits are 25 AI requests, 5 imports, and 10 uploads per
+day, 100 MiB storage, and 2 concurrent AI requests. Adjust them through an
+audited server/admin operation rather than a browser write.
 
 Storage object names must use this layout:
 
@@ -72,14 +96,8 @@ supabase migration list
 supabase db push
 ```
 
-Create the fixed prototype user after deployment from a trusted server or SQL
-admin session, retain its generated `id` as server-only configuration, and do
-not commit that identifier or any Supabase keys. A later auth rollout only
-needs to link `auth_user_id`; the owned records and foreign keys remain
-unchanged.
-
-The typed-knowledge migration seeds both approved career modes for users that
-already exist when it runs. If the fixed prototype user is created after the
-migration, application bootstrap must insert `primary-career` and
-`temporary-income` rows using the values in the migration. This is deliberate:
-the database cannot safely guess which later user is the fixed prototype user.
+Do not commit user identifiers or any Supabase keys. Deploy the provisioning
+migration before enabling public signup so every new account has its application
+identity before the first authenticated request. The migration backfills all
+existing Auth users; any intentionally unlinked legacy prototype identity is
+left untouched for an explicit, audited migration decision.

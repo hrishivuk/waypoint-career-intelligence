@@ -2,16 +2,18 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 
 import {
-  createCareerAiGateway,
+  createUserCareerAiGateway,
+  safeAiErrorMessage,
   type CareerNarrativeExtraction,
 } from "@/infrastructure/ai";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { createDocumentTextBlocks } from "@/infrastructure/documents";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { consumeUsage } from "@/infrastructure/usage/consume-usage";
 
 export const dynamic = "force-dynamic";
 
-const identity = new FixedPrototypeIdentityProvider();
+const identity = new SupabaseIdentityProvider();
 const createSchema = z.object({
   narrative: z.string().trim().min(100).max(12_000),
 });
@@ -59,6 +61,7 @@ export async function POST(request: Request) {
       );
     }
     const actor = await identity.getActor();
+    await consumeUsage(actor.userId, "imports");
     const client = getSupabaseServerClient();
     const { data: existingProfile, error: profileError } = await client
       .from("master_profile_records")
@@ -80,7 +83,7 @@ export async function POST(request: Request) {
         record,
       ]),
     );
-    const ai = createCareerAiGateway();
+    const ai = await createUserCareerAiGateway(actor.userId);
     const extractedRecords: CareerNarrativeExtraction["records"] = [];
     const accountedBlockIds = new Set<string>();
     const warnings: string[] = [];
@@ -330,14 +333,12 @@ function selectRelevantProfileRecords(
 }
 
 function importError(error: unknown) {
-  console.error("Career narrative import failed", error);
+  console.error("Career narrative import failed", { category: error instanceof Error ? error.name : "UnknownError" });
   return Response.json(
     {
       error: {
         message:
-          error instanceof Error
-            ? error.message
-            : "The career narrative could not be processed.",
+          safeAiErrorMessage(error),
       },
     },
     { status: 500 },

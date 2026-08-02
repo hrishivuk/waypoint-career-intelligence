@@ -8,13 +8,12 @@ const optionalServerEnvSchema = z.object({
   AI_PROVIDER: z.enum(["openai", "groq"]).default("openai"),
   GROQ_API_KEY: z.string().min(1).optional(),
   GROQ_MODEL: z.string().min(1).optional(),
+  AI_CREDENTIAL_ENCRYPTION_KEY_VERSION: z.string().min(1).optional(),
+  AI_CREDENTIAL_ENCRYPTION_KEYS: z.string().min(1).optional(),
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_SUPABASE_URL: z.url().optional(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1).optional(),
-  PROTOTYPE_USER_ID: z
-    .uuid()
-    .default("00000000-0000-4000-8000-000000000001"),
 });
 
 export type ServerEnv = z.infer<typeof optionalServerEnvSchema>;
@@ -28,12 +27,14 @@ export function getServerEnv(): ServerEnv {
     AI_PROVIDER: process.env.AI_PROVIDER,
     GROQ_API_KEY: process.env.GROQ_API_KEY,
     GROQ_MODEL: process.env.GROQ_MODEL,
+    AI_CREDENTIAL_ENCRYPTION_KEY_VERSION:
+      process.env.AI_CREDENTIAL_ENCRYPTION_KEY_VERSION,
+    AI_CREDENTIAL_ENCRYPTION_KEYS: process.env.AI_CREDENTIAL_ENCRYPTION_KEYS,
     SUPABASE_URL: process.env.SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    PROTOTYPE_USER_ID: process.env.PROTOTYPE_USER_ID,
   });
 
   return cachedEnv;

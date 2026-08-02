@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
-const identity = new FixedPrototypeIdentityProvider();
+const identity = new SupabaseIdentityProvider();
 const reviewSchema = z.object({
   decisions: z.array(
     z.object({

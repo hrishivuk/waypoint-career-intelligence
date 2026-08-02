@@ -5,11 +5,11 @@ import {
   ListActiveHandoverReview,
   ReviewHandoverCandidate,
 } from "@/application/handover-review";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { SupabaseHandoverReviewRepository } from "@/infrastructure/persistence/handover-review";
 
 const repository = new SupabaseHandoverReviewRepository();
-export const identityProvider = new FixedPrototypeIdentityProvider();
+export const identityProvider = new SupabaseIdentityProvider();
 export const listActiveReview = new ListActiveHandoverReview(repository);
 export const reviewCandidate = new ReviewHandoverCandidate(repository);
 

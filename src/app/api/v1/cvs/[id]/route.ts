@@ -1,9 +1,9 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export const dynamic = "force-dynamic";
 
-const identity = new FixedPrototypeIdentityProvider();
+const identity = new SupabaseIdentityProvider();
 
 export async function DELETE(
   _request: Request,
@@ -38,4 +38,3 @@ export async function DELETE(
     return Response.json({ error: "The CV could not be deleted." }, { status: 500 });
   }
 }
-

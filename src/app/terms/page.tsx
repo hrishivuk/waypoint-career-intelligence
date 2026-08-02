@@ -1,0 +1,5 @@
+import { PageContainer, PageHeader } from "@/components/ui";
+
+export default function TermsPage() {
+  return <PageContainer><PageHeader eyebrow="Legal" title="Terms overview" description="Important limits of Waypoint career assistance." /><div className="max-w-3xl space-y-6 text-sm leading-7 text-slate-700"><p>Waypoint is a career-organisation and decision-support tool. It does not guarantee employment, interviews, eligibility, compensation, or the accuracy of employer information.</p><p>AI-generated and extracted content may be incomplete or incorrect. You remain responsible for checking every application, factual claim, eligibility decision, and document before relying on or submitting it.</p><p>You are responsible for your connected AI-provider account, credentials, charges, quotas, and compliance with that provider’s terms. Do not upload information you do not have permission to process.</p><p>A final production terms document must identify the operator, governing law, support process, acceptable-use rules, liability terms, and account suspension policy before public launch.</p></div></PageContainer>;
+}

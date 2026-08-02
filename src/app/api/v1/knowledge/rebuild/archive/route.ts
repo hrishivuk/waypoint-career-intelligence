@@ -1,9 +1,9 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function POST() {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const { data, error } = await getSupabaseServerClient().rpc(
       "archive_waypoint_knowledge_v1",
       {

@@ -1,9 +1,10 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import { safeAiErrorMessage } from "@/infrastructure/ai";
 import { analyzeJobDescription } from "@/infrastructure/job-analysis/analyze-job-description";
 
 export async function POST(request: Request) {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const body = (await request.json()) as {
       description?: unknown;
       force?: unknown;
@@ -22,16 +23,12 @@ export async function POST(request: Request) {
       }),
     );
   } catch (error) {
-    console.error("Job analysis failed", {
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    console.error("Job analysis failed", { category: error instanceof Error ? error.name : "UnknownError" });
     return Response.json(
       {
         error: {
           message:
-            error instanceof Error
-              ? error.message
-              : "The job could not be analysed.",
+            safeAiErrorMessage(error),
         },
       },
       { status: 500 },

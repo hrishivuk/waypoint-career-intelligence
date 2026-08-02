@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 const bodySchema = z.object({
@@ -19,7 +19,7 @@ export async function PATCH(
   context: { params: Promise<{ analysisId: string; index: string }> },
 ) {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const { analysisId, index: rawIndex } = await context.params;
     const index = Number(rawIndex);
     if (!Number.isInteger(index) || index < 0) {

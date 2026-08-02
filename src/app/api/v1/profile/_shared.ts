@@ -8,7 +8,7 @@ import {
   ProfileFactNotFoundError,
   UpdateProfileFactValue,
 } from "@/application/profile";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { SupabaseProfileFactRepository } from "@/infrastructure/persistence/profile";
 
 export const profileFactCategorySchema = z.enum([
@@ -29,7 +29,7 @@ export const profileFactConfirmationSchema = z.enum([
   "rejected",
 ]);
 
-export const identityProvider = new FixedPrototypeIdentityProvider();
+export const identityProvider = new SupabaseIdentityProvider();
 export const profileFactRepository = new SupabaseProfileFactRepository();
 const systemClock = { now: () => new Date() };
 export const listProfileFacts = new ListProfileFacts(profileFactRepository);

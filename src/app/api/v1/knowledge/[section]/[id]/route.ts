@@ -1,4 +1,4 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 const sectionTables = {
@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: Promise<{ section: string; id: string }> },
 ) {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const { section, id } = await params;
     const body = (await request.json()) as Record<string, unknown>;
     const client = getSupabaseServerClient();

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { KnowledgeLibrary } from "@/components/knowledge-library";
 import { PageContainer, PageHeader } from "@/components/ui";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { loadKnowledgeLibrary } from "@/infrastructure/persistence/knowledge-library/supabase-knowledge-library";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProfileInsightsPage() {
-  const actor = await new FixedPrototypeIdentityProvider().getActor();
+  const actor = await new SupabaseIdentityProvider().getActor();
   const sections = await loadKnowledgeLibrary(actor.userId, [
     "career-modes",
     "preferences",

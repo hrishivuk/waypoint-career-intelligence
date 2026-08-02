@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { AppShell } from "@/components/ui";
-import { getWorkspaceMode } from "@/infrastructure/workspace/server-workspace";
+import { createSupabaseAuthServerClient, isSupabaseAuthConfigured } from "@/infrastructure/auth/supabase-auth-server";
 
 import "./globals.css";
 
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
     template: "%s · Waypoint",
   },
   description:
-    "A personal AI-assisted career intelligence workspace built around confirmed evidence.",
+    "Turn your career evidence into clearer job decisions, stronger CV choices, and reusable applications.",
+  applicationName: "Waypoint",
 };
 
 export default async function RootLayout({
@@ -19,11 +20,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const workspaceMode = await getWorkspaceMode();
+  let authenticated = false;
+  if (isSupabaseAuthConfigured()) {
+    const auth = await createSupabaseAuthServerClient();
+    authenticated = Boolean((await auth.auth.getUser()).data.user);
+  }
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
-        <AppShell workspaceMode={workspaceMode}>{children}</AppShell>
+        <AppShell authenticated={authenticated}>{children}</AppShell>
       </body>
     </html>
   );

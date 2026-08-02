@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageContainer, PageHeader, buttonStyles } from "@/components/ui";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export const metadata: Metadata = {
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KnowledgeExceptionsPage() {
-  const actor = await new FixedPrototypeIdentityProvider().getActor();
+  const actor = await new SupabaseIdentityProvider().getActor();
   const { data, error } = await getSupabaseServerClient()
     .from("knowledge_exceptions")
     .select("id,reason,status,candidate,details,created_at")

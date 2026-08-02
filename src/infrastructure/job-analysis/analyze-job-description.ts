@@ -7,7 +7,7 @@ import type {
   JobRequirementResult,
 } from "@/application/job-analysis";
 import {
-  createCareerAiGateway,
+  createUserCareerAiGateway,
   JobDescriptionParsingSchema,
   type CareerAiGateway,
   type JobDescriptionParsing,
@@ -37,7 +37,7 @@ export async function analyzeJobDescription(
   const storedParsed = options.force && !options.reparse
     ? await findStoredParsedJob(userId, cleaned)
     : null;
-  const ai = createCareerAiGateway();
+  const ai = await createUserCareerAiGateway(userId);
   let parsingFallback = false;
   let parsed;
   if (storedParsed) {

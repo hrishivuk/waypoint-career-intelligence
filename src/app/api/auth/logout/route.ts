@@ -1,6 +1,3 @@
-import { cookies } from "next/headers";
-
-import { WORKSPACE_COOKIE } from "@/domain/workspace";
 import {
   createSupabaseAuthServerClient,
   isSupabaseAuthConfigured,
@@ -11,8 +8,5 @@ export async function POST() {
     const auth = await createSupabaseAuthServerClient();
     await auth.auth.signOut();
   }
-  const store = await cookies();
-  store.delete(WORKSPACE_COOKIE);
   return Response.json({ ok: true });
 }
-

@@ -6,10 +6,14 @@ import type { CareerAiGateway } from "./gateway";
 import { GroqCareerAiGateway } from "./groq-career-ai-gateway";
 import { loadOpenAiConfig } from "./config";
 import { OpenAiCareerAiGateway } from "./openai-career-ai-gateway";
+import {
+  AiProviderSchema,
+  ProviderCredentialContextSchema,
+  type AiProvider,
+  type ProviderCredentialContext,
+} from "./provider-credentials";
 
-const providerSchema = z.enum(["groq", "openai"]).default("openai");
-
-export type AiProvider = z.infer<typeof providerSchema>;
+const providerSchema = AiProviderSchema.default("openai");
 
 export function configuredAiProvider(
   environment: NodeJS.ProcessEnv = process.env,
@@ -19,18 +23,32 @@ export function configuredAiProvider(
 
 export function createCareerAiGateway(
   environment: NodeJS.ProcessEnv = process.env,
+  credential?: ProviderCredentialContext,
 ): CareerAiGateway {
-  const provider = configuredAiProvider(environment);
+  const parsedCredential = credential
+    ? ProviderCredentialContextSchema.parse(credential)
+    : undefined;
+  const provider =
+    parsedCredential?.provider ?? configuredAiProvider(environment);
   if (provider === "groq") {
-    const apiKey = z
-      .string()
-      .trim()
-      .min(1, "GROQ_API_KEY is required when AI_PROVIDER=groq")
-      .parse(environment.GROQ_API_KEY);
+    const apiKey =
+      parsedCredential?.apiKey ??
+      z
+        .string()
+        .trim()
+        .min(1, "GROQ_API_KEY is required when AI_PROVIDER=groq")
+        .parse(environment.GROQ_API_KEY);
     return new GroqCareerAiGateway({
       apiKey,
       models: configuredGroqModels(environment),
     });
+  }
+  if (parsedCredential) {
+    const config = loadOpenAiConfig({
+      ...environment,
+      OPENAI_API_KEY: parsedCredential.apiKey,
+    });
+    return new OpenAiCareerAiGateway(config);
   }
   return new OpenAiCareerAiGateway(loadOpenAiConfig(environment));
 }

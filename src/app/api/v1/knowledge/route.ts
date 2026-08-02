@@ -1,9 +1,9 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function POST(request: Request) {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const body = (await request.json()) as {
       kind?: unknown;
       names?: unknown;

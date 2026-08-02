@@ -1,9 +1,9 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function GET() {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const client = getSupabaseServerClient();
     const { data: batches, error: batchError } = await client
       .from("skill_model_review_batches")
@@ -33,7 +33,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const body = (await request.json()) as {
       id?: unknown;
       decision?: unknown;

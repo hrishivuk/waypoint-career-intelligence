@@ -1,4 +1,4 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function POST(
@@ -7,7 +7,7 @@ export async function POST(
 ) {
   const redirect = new URL("/knowledge/skills/review", request.url);
   try {
-    const actor = await new FixedPrototypeIdentityProvider().getActor();
+    const actor = await new SupabaseIdentityProvider().getActor();
     const { id } = await params;
     const form = await request.formData();
     const decision = String(form.get("decision") ?? "");

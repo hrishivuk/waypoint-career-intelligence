@@ -1,11 +1,11 @@
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { loadApplicationKit } from "@/infrastructure/application-kit/application-kit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const { userId } = await new FixedPrototypeIdentityProvider().getActor();
+    const { userId } = await new SupabaseIdentityProvider().getActor();
     return Response.json({ sections: await loadApplicationKit(userId) });
   } catch (error) {
     console.error("Application Kit load failed", error);
@@ -15,4 +15,3 @@ export async function GET() {
     );
   }
 }
-

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { parseCvDeterministically } from "@/infrastructure/cv/deterministic-cv-parser";
 import {
   DOCX_MIME_TYPE,
@@ -8,10 +8,11 @@ import {
 } from "@/infrastructure/documents/document-text-extractor";
 import { createDocumentTextExtractor } from "@/infrastructure/documents/create-document-text-extractor";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { assertStorageAllowance, consumeUsage } from "@/infrastructure/usage/consume-usage";
 
 export const dynamic = "force-dynamic";
 
-const identity = new FixedPrototypeIdentityProvider();
+const identity = new SupabaseIdentityProvider();
 const BUCKET = "career-documents";
 const MAX_BYTES = 10 * 1024 * 1024;
 const acceptedTypes = new Set([PDF_MIME_TYPE, DOCX_MIME_TYPE]);
@@ -87,8 +88,15 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
     const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!hasExpectedSignature(bytes, file.type)) {
+      return Response.json(
+        { error: "The file contents do not match the selected PDF or DOCX format." },
+        { status: 400 },
+      );
+    }
+    await assertStorageAllowance(userId, file.size);
+    await consumeUsage(userId, "uploads");
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     const displayName = String(form.get("displayName") || file.name.replace(/\.[^.]+$/, ""))
       .trim().slice(0, 120);
@@ -196,3 +204,12 @@ export async function POST(request: Request) {
   }
 }
 
+function hasExpectedSignature(bytes: Uint8Array, mimeType: string) {
+  if (mimeType === PDF_MIME_TYPE) {
+    return String.fromCharCode(...bytes.slice(0, 5)) === "%PDF-";
+  }
+  if (mimeType === DOCX_MIME_TYPE) {
+    return bytes[0] === 0x50 && bytes[1] === 0x4b;
+  }
+  return false;
+}

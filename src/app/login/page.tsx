@@ -1,5 +1,6 @@
-import { PersonalLogin } from "@/components/workspace/personal-login";
+import { LoginForm } from "@/components/auth/login-form";
+import { Suspense } from "react";
 
 export default function LoginPage() {
-  return <PersonalLogin />;
+  return <Suspense><LoginForm /></Suspense>;
 }

@@ -1,17 +1,18 @@
 import { createHash } from "node:crypto";
 
 import {
-  createCareerAiGateway,
+  createUserCareerAiGateway,
+  safeAiErrorMessage,
   type CareerNarrativeExtraction,
 } from "@/infrastructure/ai";
-import { FixedPrototypeIdentityProvider } from "@/infrastructure/auth/fixed-prototype-identity";
+import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
 import { createDocumentTextBlocks } from "@/infrastructure/documents";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const identity = new FixedPrototypeIdentityProvider();
+const identity = new SupabaseIdentityProvider();
 const REPAIR_VERSION = "master-profile-coverage-v1";
 
 export async function POST() {
@@ -74,7 +75,7 @@ export async function POST() {
         record,
       ]),
     );
-    const ai = createCareerAiGateway();
+    const ai = await createUserCareerAiGateway(actor.userId);
     const records: CareerNarrativeExtraction["records"] = [];
     const accounted = new Set<string>();
     const metadata: Array<Record<string, unknown>> = [];
@@ -235,14 +236,12 @@ export async function POST() {
       ).length,
     });
   } catch (error) {
-    console.error("Master Profile repair failed", error);
+    console.error("Master Profile repair failed", { category: error instanceof Error ? error.name : "UnknownError" });
     return Response.json(
       {
         error: {
           message:
-            error instanceof Error
-              ? error.message
-              : "The Master Profile could not be repaired.",
+            safeAiErrorMessage(error),
         },
       },
       { status: 500 },
