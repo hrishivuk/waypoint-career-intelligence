@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { CareerProfileNav } from "@/components/profile/career-profile-nav";
 import { PageContainer, PageHeader, buttonStyles } from "@/components/ui";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
@@ -26,15 +27,16 @@ export default async function KnowledgeExceptionsPage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Knowledge quality"
-        title="Extraction exceptions"
-        description="Waypoint activates verified facts automatically. Only conflicting, weak or structurally invalid candidates appear here."
+        eyebrow="Career Profile"
+        title="Needs attention"
+        description="Review information Waypoint could not safely add because it was conflicting, incomplete or structurally invalid."
         actions={
           <Link href="/knowledge" className={buttonStyles.secondary}>
-            Back to knowledge
+            Back to profile
           </Link>
         }
       />
+      <CareerProfileNav />
       <p className="mb-5 text-sm text-slate-600">
         {open.length} open {open.length === 1 ? "exception" : "exceptions"}
       </p>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { KnowledgeReview } from "@/components/knowledge-review";
+import { CareerProfileNav } from "@/components/profile/career-profile-nav";
 import { PageContainer, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
@@ -13,8 +14,8 @@ export default function KnowledgeReviewPage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Data management"
-        title="Imported knowledge"
+        eyebrow="Career Profile"
+        title="Review profile changes"
         description={
           <>
           Imported information starts as a proposal. Confirm only what is
@@ -23,6 +24,7 @@ export default function KnowledgeReviewPage() {
           </>
         }
       />
+      <CareerProfileNav />
       <KnowledgeReview />
     </PageContainer>
   );

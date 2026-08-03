@@ -10,7 +10,7 @@ describe("navigation model", () => {
   it("defines the approved primary destinations in workflow order", () => {
     expect(primaryNavigation).toEqual([
       { href: "/", label: "Home" },
-      { href: "/profile", label: "Career Profile" },
+      { href: "/knowledge", label: "Career Profile", aliases: ["/profile"] },
       { href: "/cvs", label: "CVs" },
       { href: "/jobs", label: "Jobs" },
       { href: "/application-kit", label: "Application Kit" },
@@ -39,8 +39,8 @@ describe("active navigation matching", () => {
   });
 
   it.each([
-    ["/profile", "/profile"],
-    ["/profile/review", "/profile"],
+    ["/knowledge", "/knowledge"],
+    ["/knowledge/review", "/knowledge"],
     ["/cvs/example-cv", "/cvs"],
     ["/jobs", "/jobs"],
     ["/jobs/new", "/jobs"],
@@ -54,6 +54,11 @@ describe("active navigation matching", () => {
   it("does not match routes that only share a text prefix", () => {
     expect(isNavigationItemActive("/profiled", "/profile")).toBe(false);
     expect(isNavigationItemActive("/jobsmith", "/jobs")).toBe(false);
+  });
+
+  it("supports workflow aliases without changing the primary destination", () => {
+    expect(isNavigationItemActive("/profile", "/knowledge", ["/profile"])).toBe(true);
+    expect(isNavigationItemActive("/profile/review", "/knowledge", ["/profile"])).toBe(true);
   });
 
   it("normalizes trailing slashes and ignores query strings or fragments", () => {

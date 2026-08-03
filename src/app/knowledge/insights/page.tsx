@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { KnowledgeLibrary } from "@/components/knowledge-library";
+import { CareerProfileNav } from "@/components/profile/career-profile-nav";
 import { PageContainer, PageHeader } from "@/components/ui";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { loadKnowledgeLibrary } from "@/infrastructure/persistence/knowledge-library/supabase-knowledge-library";
@@ -27,7 +28,7 @@ export default async function ProfileInsightsPage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Career knowledge"
+        eyebrow="Career Profile"
         title="Profile insights"
         description={
           <>
@@ -37,6 +38,7 @@ export default async function ProfileInsightsPage() {
           </>
         }
       />
+      <CareerProfileNav />
       <KnowledgeLibrary sections={sections} />
     </PageContainer>
   );

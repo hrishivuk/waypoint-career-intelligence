@@ -40,7 +40,7 @@ export default async function Home() {
   };
   const nextAction = decideHomeReadiness(snapshot);
   const readiness = [
-    { label: "Career Profile", value: snapshot.confirmedProfileCount, ready: snapshot.confirmedProfileCount > 0, href: "/profile", icon: UserRound, unit: "confirmed records" },
+    { label: "Career Profile", value: snapshot.confirmedProfileCount, ready: snapshot.confirmedProfileCount > 0, href: "/knowledge", icon: UserRound, unit: "confirmed records" },
     { label: "CV library", value: snapshot.cvDocumentCount, ready: snapshot.cvDocumentCount > 0, href: "/cvs", icon: FileText, unit: "documents" },
     { label: "AI provider", value: connectedProvider ? 1 : 0, ready: Boolean(connectedProvider), href: "/settings", icon: Sparkles, unit: connectedProvider ?? "not connected" },
   ];

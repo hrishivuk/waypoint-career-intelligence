@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CareerProfileNav } from "@/components/profile/career-profile-nav";
 import { NarrativeImporter } from "@/components/profile";
 import { PageContainer, PageHeader } from "@/components/ui";
 
@@ -12,15 +13,16 @@ export default function ProfilePage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Data management"
-        title="Build your Master Profile"
+        eyebrow="Career Profile"
+        title="Add information"
         description={
           <>
-          Turn your complete career narrative into grouped, source-supported
-          knowledge. Nothing becomes active until you approve the review.
+          Describe your experience in your own words. Waypoint will structure
+          proposed changes for you to inspect before anything is confirmed.
           </>
         }
       />
+      <CareerProfileNav />
       <NarrativeImporter />
     </PageContainer>
   );

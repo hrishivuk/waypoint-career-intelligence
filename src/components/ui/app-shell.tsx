@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 
 const icons: Record<string, ComponentType<{ className?: string }>> = {
   "/": Home,
-  "/profile": UserRound,
+  "/knowledge": UserRound,
   "/cvs": FileText,
   "/jobs": BriefcaseBusiness,
   "/application-kit": BookOpenText,
@@ -232,7 +232,7 @@ function NavigationList({
       <ul className="space-y-1">
         {items.map((item) => {
           const Icon = icons[item.href];
-          const active = isNavigationItemActive(pathname, item.href);
+          const active = isNavigationItemActive(pathname, item.href, item.aliases);
 
           return (
             <li key={item.href}>

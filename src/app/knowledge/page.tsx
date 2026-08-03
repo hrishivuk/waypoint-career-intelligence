@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { KnowledgeLibrary } from "@/components/knowledge-library";
+import { CareerProfileNav } from "@/components/profile/career-profile-nav";
 import { buttonStyles, PageContainer, PageHeader } from "@/components/ui";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { loadKnowledgeLibrary } from "@/infrastructure/persistence/knowledge-library/supabase-knowledge-library";
@@ -26,38 +27,26 @@ export default async function KnowledgePage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Career knowledge"
-        title="What Waypoint knows about your work"
+        eyebrow="Career Profile"
+        title="Your reviewed career evidence"
         description={
           <>
-          Start with your categorized skills and self-assessed levels, then
-          review the projects, experience and stable facts that support job
-          recommendations.
+          This is the information Waypoint can use when evaluating jobs and
+          comparing CV coverage. You remain in control of every confirmed fact.
           </>
         }
         actions={
           <>
           <Link
-            href="/knowledge/insights"
-            className={buttonStyles.secondary}
-          >
-            Profile insights
-          </Link>
-          <Link
-            href="/knowledge/exceptions"
-            className={buttonStyles.secondary}
-          >
-            Extraction exceptions
-          </Link>
-          <Link
             href="/profile"
-            className={buttonStyles.secondary}
+            className={buttonStyles.primary}
           >
-            Add a fact
+            Add information
           </Link>
           </>
         }
       />
+      <CareerProfileNav />
       <KnowledgeLibrary sections={sections} />
     </PageContainer>
   );
