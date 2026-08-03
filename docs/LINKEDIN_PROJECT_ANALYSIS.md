@@ -201,7 +201,7 @@ The final pre-publish run must update this table with its date and commit SHA.
 | Playwright public smoke | 3 tests passing | Landing, auth/legal pages, and safe health response. |
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |
 | npm audit | 0 known vulnerabilities at last audit | Registry advisories at that point in time. |
-| Two-user Supabase integration | Harness implemented; live run pending | Requires a disposable migrated Supabase project. |
+| Two-user Supabase integration | 2 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation and AI concurrency in the linked Supabase project. |
 | Google/email/BYOK live flow | Pending | Requires hosted provider and SMTP credentials. |
 
 Passing automated tests do not prove production security, usability, provider
@@ -210,8 +210,9 @@ behavior, accessibility, or user outcomes.
 ## 8. Honest limitations
 
 - No production URL or public-user outcome evidence is recorded yet.
-- Google OAuth, email delivery, redirects, migrations, RLS, and Storage have not
-  yet been verified together in the final hosted project.
+- Database migrations, RLS, private Storage, signed URLs, and AI concurrency
+  have been verified with two temporary accounts in the linked hosted project.
+  Google OAuth, email delivery, and final deployment redirects remain pending.
 - The destructive two-user integration suite requires a disposable Supabase
   environment and must never target production.
 - OpenAI/Groq cost, retention, availability, and model behavior remain subject

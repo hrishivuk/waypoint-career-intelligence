@@ -3,9 +3,15 @@ import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient, type User } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-const url = required("SUPABASE_TEST_URL");
-const publishableKey = required("SUPABASE_TEST_PUBLISHABLE_KEY");
-const serviceRoleKey = required("SUPABASE_TEST_SERVICE_ROLE_KEY");
+const url = requiredOne("SUPABASE_TEST_URL", "SUPABASE_URL");
+const publishableKey = requiredOne(
+  "SUPABASE_TEST_PUBLISHABLE_KEY",
+  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+);
+const serviceRoleKey = requiredOne(
+  "SUPABASE_TEST_SERVICE_ROLE_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY",
+);
 if (process.env.SUPABASE_TEST_ALLOW_MUTATION !== "true") {
   throw new Error("Set SUPABASE_TEST_ALLOW_MUTATION=true only for a disposable migrated Supabase test project.");
 }
@@ -173,8 +179,10 @@ async function createActor(label: string): Promise<TestActor> {
   return { applicationUserId: identity.data.id, client };
 }
 
-function required(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is required for the destructive integration suite.`);
+function requiredOne(primary: string, fallback: string): string {
+  const value = process.env[primary]?.trim() || process.env[fallback]?.trim();
+  if (!value) {
+    throw new Error(`${primary} (or ${fallback}) is required for the destructive integration suite.`);
+  }
   return value;
 }

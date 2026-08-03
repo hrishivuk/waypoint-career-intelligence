@@ -229,6 +229,16 @@ newer, then upload and parse representative, fictional PDFs and DOCX files in
 staging and production. A successful build alone does not prove extraction
 works in the hosting runtime.
 
+### Hosted database validation record
+
+On 3 August 2026, the linked hosted project was upgraded through migration
+`202608030001`. The live integration suite created two temporary confirmed Auth
+users and passed database select/insert/update/delete isolation, guessed and
+cross-tenant relationship checks, private Storage upload and signed-URL checks,
+and concurrent-AI lease enforcement. Cleanup verification found zero temporary
+Auth/application users and zero active leases. This evidence does not replace
+Google OAuth, SMTP, provider-key, or deployed-browser validation.
+
 ## 9. Production controls
 
 Before public traffic:
