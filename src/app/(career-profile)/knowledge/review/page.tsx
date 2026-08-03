@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 import { KnowledgeReview } from "@/components/knowledge-review";
-import { CareerProfileNav } from "@/components/profile/career-profile-nav";
-import { PageContainer, PageHeader } from "@/components/ui";
+import { CareerProfileSectionHeader } from "@/components/profile/career-profile-section-header";
 
 export const metadata: Metadata = {
   title: "Review imported knowledge",
@@ -12,9 +11,8 @@ export const metadata: Metadata = {
 
 export default function KnowledgeReviewPage() {
   return (
-    <PageContainer>
-      <PageHeader
-        eyebrow="Career Profile"
+    <>
+      <CareerProfileSectionHeader
         title="Review profile changes"
         description={
           <>
@@ -24,8 +22,7 @@ export default function KnowledgeReviewPage() {
           </>
         }
       />
-      <CareerProfileNav />
       <KnowledgeReview />
-    </PageContainer>
+    </>
   );
 }

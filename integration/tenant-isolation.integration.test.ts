@@ -234,6 +234,120 @@ describe("two-user RLS and Storage isolation", () => {
     expect(afterRollback.data?.criticality).toBe("preferred");
   });
 
+  it("atomically reviews and activates only the complete owned narrative decision set", async () => {
+    const importId = randomUUID();
+    const acceptedId = randomUUID();
+    const rejectedId = randomUUID();
+    const importInsert = await userA.client.from("career_narrative_imports").insert({
+      id: importId,
+      user_id: userA.applicationUserId,
+      source_text: `Integration narrative ${"evidence ".repeat(12)}`,
+      source_hash: randomUUID().replaceAll("-", "").padEnd(64, "0"),
+      status: "staged",
+    });
+    expect(importInsert.error).toBeNull();
+
+    const candidateInsert = await userA.client
+      .from("career_narrative_candidates")
+      .insert([
+        {
+          id: acceptedId,
+          user_id: userA.applicationUserId,
+          import_id: importId,
+          record_type: "skill",
+          title: "TypeScript",
+          statement: "Uses TypeScript in production frontend applications.",
+          source_block_id: "integration-block-1",
+          source_excerpt: "Uses TypeScript in production frontend applications.",
+          confidence: 0.9,
+          display_order: 0,
+          reconciliation: "new",
+          canonical_key: `typescript-${runId.replaceAll("-", "")}`,
+        },
+        {
+          id: rejectedId,
+          user_id: userA.applicationUserId,
+          import_id: importId,
+          record_type: "skill",
+          title: "Unverified skill",
+          statement: "This proposed skill should be rejected.",
+          source_block_id: "integration-block-2",
+          source_excerpt: "This proposed skill should be rejected.",
+          confidence: 0.5,
+          display_order: 1,
+          reconciliation: "new",
+          canonical_key: `unverified-${runId.replaceAll("-", "")}`,
+        },
+      ]);
+    expect(candidateInsert.error).toBeNull();
+
+    const incomplete = await userA.client.rpc(
+      "review_and_activate_career_narrative_import_v1",
+      {
+        p_import_id: importId,
+        p_decisions: [{ id: acceptedId, decision: "confirmed" }],
+      },
+    );
+    expect(incomplete.error?.code).toBe("P0001");
+    const afterMismatch = await userA.client
+      .from("career_narrative_candidates")
+      .select("decision")
+      .eq("import_id", importId)
+      .order("display_order");
+    expect(afterMismatch.data?.map(({ decision }) => decision)).toEqual([
+      "pending",
+      "pending",
+    ]);
+
+    const foreign = await userB.client.rpc(
+      "review_and_activate_career_narrative_import_v1",
+      {
+        p_import_id: importId,
+        p_decisions: [
+          { id: acceptedId, decision: "confirmed" },
+          { id: rejectedId, decision: "rejected" },
+        ],
+      },
+    );
+    expect(foreign.error?.code).toBe("P0002");
+
+    const activated = await userA.client.rpc(
+      "review_and_activate_career_narrative_import_v1",
+      {
+        p_import_id: importId,
+        p_decisions: [
+          { id: acceptedId, decision: "confirmed" },
+          { id: rejectedId, decision: "rejected" },
+        ],
+      },
+    );
+    expect(activated.error).toBeNull();
+    expect(activated.data).toBe(1);
+
+    const [storedImport, storedCandidates, storedProfile] = await Promise.all([
+      userA.client
+        .from("career_narrative_imports")
+        .select("status")
+        .eq("id", importId)
+        .single(),
+      userA.client
+        .from("career_narrative_candidates")
+        .select("decision")
+        .eq("import_id", importId)
+        .order("display_order"),
+      userA.client
+        .from("master_profile_records")
+        .select("source_candidate_id")
+        .eq("source_import_id", importId),
+    ]);
+    expect(storedImport.data?.status).toBe("activated");
+    expect(storedCandidates.data?.map(({ decision }) => decision)).toEqual([
+      "confirmed",
+      "rejected",
+    ]);
+    expect(storedProfile.data).toEqual([{ source_candidate_id: acceptedId }]);
+  });
+
   it("enforces and releases the configured per-user AI concurrency limit", async () => {
     const first = await admin.rpc("acquire_waypoint_ai_request_lease", {
       target_user_id: userA.applicationUserId,

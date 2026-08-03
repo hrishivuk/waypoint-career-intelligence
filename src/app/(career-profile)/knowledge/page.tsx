@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { KnowledgeLibrary } from "@/components/knowledge-library";
-import { CareerProfileNav } from "@/components/profile/career-profile-nav";
-import { buttonStyles, PageContainer, PageHeader } from "@/components/ui";
+import { CareerProfileSectionHeader } from "@/components/profile/career-profile-section-header";
+import { buttonStyles } from "@/components/ui";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { loadKnowledgeLibrary } from "@/infrastructure/persistence/knowledge-library/supabase-knowledge-library";
 
@@ -25,9 +25,8 @@ export default async function KnowledgePage() {
   ]);
 
   return (
-    <PageContainer>
-      <PageHeader
-        eyebrow="Career Profile"
+    <>
+      <CareerProfileSectionHeader
         title="Your reviewed career evidence"
         description={
           <>
@@ -46,8 +45,7 @@ export default async function KnowledgePage() {
           </>
         }
       />
-      <CareerProfileNav />
       <KnowledgeLibrary sections={sections} />
-    </PageContainer>
+    </>
   );
 }

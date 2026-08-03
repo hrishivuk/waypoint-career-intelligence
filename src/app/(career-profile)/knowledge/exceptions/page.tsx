@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-import { CareerProfileNav } from "@/components/profile/career-profile-nav";
-import { PageContainer, PageHeader, buttonStyles } from "@/components/ui";
+import { CareerProfileSectionHeader } from "@/components/profile/career-profile-section-header";
+import { buttonStyles } from "@/components/ui";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export const metadata: Metadata = {
@@ -26,9 +26,8 @@ export default async function KnowledgeExceptionsPage() {
   const open = exceptions.filter((item) => item.status === "open");
 
   return (
-    <PageContainer>
-      <PageHeader
-        eyebrow="Career Profile"
+    <>
+      <CareerProfileSectionHeader
         title="Needs attention"
         description="Review information Waypoint could not safely add because it was conflicting, incomplete or structurally invalid."
         actions={
@@ -37,7 +36,6 @@ export default async function KnowledgeExceptionsPage() {
           </Link>
         }
       />
-      <CareerProfileNav />
       <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-[var(--border-subtle)] bg-card px-4 py-3">
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{open.length}</span> open{" "}
@@ -110,7 +108,7 @@ export default async function KnowledgeExceptionsPage() {
           </p>
         </section>
       )}
-    </PageContainer>
+    </>
   );
 }
 

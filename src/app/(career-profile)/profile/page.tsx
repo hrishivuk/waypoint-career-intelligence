@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
-import { CareerProfileNav } from "@/components/profile/career-profile-nav";
+import { CareerProfileSectionHeader } from "@/components/profile/career-profile-section-header";
 import { NarrativeImporter } from "@/components/profile";
-import { PageContainer, PageHeader } from "@/components/ui";
 
 export const metadata: Metadata = {
   title: "Career profile",
@@ -11,9 +10,8 @@ export const metadata: Metadata = {
 
 export default function ProfilePage() {
   return (
-    <PageContainer>
-      <PageHeader
-        eyebrow="Career Profile"
+    <>
+      <CareerProfileSectionHeader
         title="Add information"
         description={
           <>
@@ -22,8 +20,7 @@ export default function ProfilePage() {
           </>
         }
       />
-      <CareerProfileNav />
       <NarrativeImporter />
-    </PageContainer>
+    </>
   );
 }

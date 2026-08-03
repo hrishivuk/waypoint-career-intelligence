@@ -80,8 +80,9 @@ export function NarrativeImporter() {
             result.candidates
               .filter(
                 (item) =>
-                  item.decision !== "rejected" &&
-                  item.reconciliation === "new",
+                  item.decision === "confirmed" ||
+                  (item.decision === "pending" &&
+                    item.reconciliation === "new"),
               )
               .map((item) => item.id),
           ),
@@ -163,7 +164,9 @@ export function NarrativeImporter() {
         },
       );
       setActivated(result.activated);
-      setCurrentImport({ ...currentImport, status: "activated" });
+      setCurrentImport(null);
+      setCandidates([]);
+      setSelected(new Set());
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -292,12 +295,14 @@ export function NarrativeImporter() {
           {currentImport?.status === "staged" ? (
             <Button
               type="button"
-              disabled={busy || selected.size === 0}
+              disabled={busy}
               onClick={() => void activateProfile()}
               className="w-full bg-[var(--success-solid)] text-[var(--success-solid-foreground)] hover:bg-[color-mix(in_oklch,var(--success-solid),black_10%)] sm:w-auto"
             >
               <ShieldCheck aria-hidden="true" data-icon="inline-start" />
-              Activate {selected.size} selected {selected.size === 1 ? "record" : "records"}
+              {selected.size === 0
+                ? "Reject all and finish"
+                : `Activate ${selected.size} selected ${selected.size === 1 ? "record" : "records"}`}
             </Button>
           ) : null}
         </div>

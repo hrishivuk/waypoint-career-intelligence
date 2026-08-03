@@ -27,6 +27,7 @@ export async function GET() {
       .from("career_narrative_imports")
       .select("id,status,created_at,activated_at")
       .eq("user_id", actor.userId)
+      .eq("status", "staged")
       .order("created_at", { ascending: false })
       .limit(1);
     if (error) throw error;
@@ -62,6 +63,43 @@ export async function POST(request: Request) {
       );
     }
     const { actor, client } = await requireAuthenticatedContext();
+    const sourceHash = createHash("sha256")
+      .update(parsed.data.narrative, "utf8")
+      .digest("hex");
+    const { data: previousImport, error: previousImportError } = await client
+      .from("career_narrative_imports")
+      .select("id,status,created_at,activated_at")
+      .eq("user_id", actor.userId)
+      .eq("source_hash", sourceHash)
+      .maybeSingle();
+    if (previousImportError) throw previousImportError;
+    if (previousImport?.status === "staged") {
+      const { data: existingCandidates, error: existingCandidateError } =
+        await client
+          .from("career_narrative_candidates")
+          .select(
+            "id,record_type,title,statement,structured_data,source_excerpt,confidence,decision,reconciliation,target_record_id,display_order",
+          )
+          .eq("user_id", actor.userId)
+          .eq("import_id", previousImport.id)
+          .order("display_order");
+      if (existingCandidateError) throw existingCandidateError;
+      return Response.json({
+        currentImport: previousImport,
+        candidates: existingCandidates ?? [],
+      });
+    }
+    if (previousImport) {
+      return Response.json(
+        {
+          error: {
+            message:
+              "This exact narrative has already been reviewed. Change or add new information before creating another review.",
+          },
+        },
+        { status: 409 },
+      );
+    }
     await consumeUsage(actor.userId, "imports");
     const { data: existingProfile, error: profileError } = await client
       .from("master_profile_records")
@@ -145,12 +183,9 @@ export async function POST(request: Request) {
       throw new Error("No source-supported profile records were extracted.");
     }
 
-    const sourceHash = createHash("sha256")
-      .update(parsed.data.narrative, "utf8")
-      .digest("hex");
     const { data: stagedImport, error: importError } = await client
       .from("career_narrative_imports")
-      .upsert(
+      .insert(
         {
           user_id: actor.userId,
           source_text: parsed.data.narrative,
@@ -169,17 +204,10 @@ export async function POST(request: Request) {
             },
           },
         },
-        { onConflict: "user_id,source_hash" },
       )
       .select("id,status,created_at,activated_at")
       .single();
     if (importError) throw importError;
-
-    await client
-      .from("career_narrative_candidates")
-      .delete()
-      .eq("user_id", actor.userId)
-      .eq("import_id", stagedImport.id);
 
     const unique = [
       ...new Map(
@@ -243,6 +271,13 @@ export async function POST(request: Request) {
         "id,record_type,title,statement,structured_data,source_excerpt,confidence,decision,reconciliation,target_record_id,display_order",
       );
     if (candidateError) throw candidateError;
+    const { error: supersedeError } = await client
+      .from("career_narrative_imports")
+      .update({ status: "superseded" })
+      .eq("user_id", actor.userId)
+      .eq("status", "staged")
+      .neq("id", stagedImport.id);
+    if (supersedeError) throw supersedeError;
     return Response.json(
       { currentImport: stagedImport, candidates },
       { status: 201 },
