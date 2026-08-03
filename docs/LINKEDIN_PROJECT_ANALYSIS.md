@@ -1,8 +1,8 @@
 # Waypoint — complete project analysis and LinkedIn launch plan
 
-**Current branch:** `feat/public-multi-user-byok`<br>
-**Product status:** public multi-user implementation complete locally; hosted
-configuration and live-environment validation still pending.<br>
+**Current branch:** `feat/ui-ux-redesign`<br>
+**Product status:** public-beta feature set and core UI redesign complete;
+production hosting and deployed-environment validation still pending.<br>
 **Claim discipline:** do not call the product production-ready or publicly
 launched until every P0 launch check below has evidence.
 
@@ -196,13 +196,13 @@ The final pre-publish run must update this table with its date and commit SHA.
 | --- | --- | --- |
 | TypeScript | Passing | Compile-time contracts are consistent. |
 | ESLint | Passing | Configured static rules pass. |
-| Unit/security suite | 140 tests across 32 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
+| Unit/security suite | 215 tests across 37 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
 | Real PDF parser test | Passing | Lazy-loaded PDF.js extracts a generated text PDF. |
-| Playwright public smoke | 3 tests passing | Landing, auth/legal pages, and safe health response. |
+| Playwright public smoke | 4 Chromium tests passing | Landing, Google account entry, auth/legal pages, and safe health response. |
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |
 | npm audit | 0 known vulnerabilities at last audit | Registry advisories at that point in time. |
-| Two-user Supabase integration | 2 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation and AI concurrency in the linked Supabase project. |
-| Google OAuth initiation | Hosted provider enabled; PKCE redirect reached Google's sign-in UI without redirect mismatch on 3 August 2026 | Client/provider/callback initiation is configured; an interactive completed sign-in is still required. |
+| Two-user Supabase integration | 3 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation, atomic analysis updates, rollback safety, and AI concurrency in the linked Supabase project. |
+| Google OAuth local flow | Interactive Google signup completed through the hosted provider and returned to Waypoint onboarding on 3 August 2026 | Local client/provider/callback flow is configured; production origins and redirects still require deployed validation. |
 | Email/BYOK live flow | Pending | Requires inbox confirmation and low-value provider test keys. |
 
 Passing automated tests do not prove production security, usability, provider
@@ -213,7 +213,7 @@ behavior, accessibility, or user outcomes.
 - No production URL or public-user outcome evidence is recorded yet.
 - Database migrations, RLS, private Storage, signed URLs, and AI concurrency
   have been verified with two temporary accounts in the linked hosted project.
-  Google OAuth, email delivery, and final deployment redirects remain pending.
+  Production Google OAuth, email delivery, and final deployment redirects remain pending.
 - The destructive two-user integration suite requires a disposable Supabase
   environment and must never target production.
 - OpenAI/Groq cost, retention, availability, and model behavior remain subject

@@ -118,6 +118,122 @@ describe("two-user RLS and Storage isolation", () => {
     expect(removeOwn.error).toBeNull();
   });
 
+  it("atomically synchronizes requirement importance without crossing tenants", async () => {
+    const jobId = randomUUID();
+    const analysisId = randomUUID();
+    const malformedAnalysisId = randomUUID();
+    const requirementId = randomUUID();
+    const requirement = {
+      position: 0,
+      text: "Five years of TypeScript experience",
+      kind: "experience",
+      required: true,
+      match: "partial",
+      score: 60,
+      explanation: "Some supporting evidence exists.",
+      evidence: [],
+      criticality: "important",
+    };
+
+    const jobInsert = await userA.client.from("jobs").insert({
+      id: jobId,
+      user_id: userA.applicationUserId,
+      title: "Atomic update test",
+      description_text: requirement.text,
+    });
+    expect(jobInsert.error).toBeNull();
+
+    const requirementInsert = await userA.client.from("job_requirements").insert({
+      id: requirementId,
+      user_id: userA.applicationUserId,
+      job_id: jobId,
+      position: 0,
+      kind: "experience",
+      requirement_text: requirement.text,
+      is_required: true,
+      metadata: { priority: "required" },
+      criticality: "important",
+    });
+    expect(requirementInsert.error).toBeNull();
+
+    const analysisBase = {
+      user_id: userA.applicationUserId,
+      job_id: jobId,
+      recommendation: "investigate",
+      overall_score: 60,
+      confidence: 0.6,
+      summary: "Integration fixture",
+      status: "completed",
+      completed_at: new Date().toISOString(),
+      model_id: "integration-test",
+      prompt_version: "integration-test",
+      schema_version: "job-analysis-v2",
+      scoring_policy_version: "integration-test",
+    };
+    const analysesInsert = await userA.client.from("analyses").insert([
+      { id: analysisId, ...analysisBase, result: { requirements: [requirement] } },
+      { id: malformedAnalysisId, ...analysisBase, result: { requirements: [] } },
+    ]);
+    expect(analysesInsert.error).toBeNull();
+
+    const foreignUpdate = await userB.client.rpc(
+      "update_job_requirement_criticality_v1",
+      {
+        target_analysis_id: analysisId,
+        target_position: 0,
+        target_criticality: "bonus",
+      },
+    );
+    expect(foreignUpdate.error).toBeNull();
+    expect(foreignUpdate.data).toBe(false);
+
+    const ownUpdate = await userA.client.rpc("update_job_requirement_criticality_v1", {
+      target_analysis_id: analysisId,
+      target_position: 0,
+      target_criticality: "preferred",
+    });
+    expect(ownUpdate.error).toBeNull();
+    expect(ownUpdate.data).toBe(true);
+
+    const [storedRequirement, storedAnalysis] = await Promise.all([
+      userA.client
+        .from("job_requirements")
+        .select("criticality,is_required,metadata")
+        .eq("id", requirementId)
+        .single(),
+      userA.client.from("analyses").select("result").eq("id", analysisId).single(),
+    ]);
+    expect(storedRequirement.error).toBeNull();
+    expect(storedRequirement.data).toMatchObject({
+      criticality: "preferred",
+      is_required: false,
+      metadata: { priority: "preferred", corrected_by_user: true },
+    });
+    expect(storedAnalysis.error).toBeNull();
+    expect(storedAnalysis.data?.result).toMatchObject({
+      requiresReanalysis: true,
+      reanalysisReason: "requirement_criticality_changed",
+      requirements: [{ criticality: "preferred", required: false }],
+    });
+
+    const malformedUpdate = await userA.client.rpc(
+      "update_job_requirement_criticality_v1",
+      {
+        target_analysis_id: malformedAnalysisId,
+        target_position: 0,
+        target_criticality: "bonus",
+      },
+    );
+    expect(malformedUpdate.error?.code).toBe("P0001");
+
+    const afterRollback = await userA.client
+      .from("job_requirements")
+      .select("criticality")
+      .eq("id", requirementId)
+      .single();
+    expect(afterRollback.data?.criticality).toBe("preferred");
+  });
+
   it("enforces and releases the configured per-user AI concurrency limit", async () => {
     const first = await admin.rpc("acquire_waypoint_ai_request_lease", {
       target_user_id: userA.applicationUserId,
