@@ -28,7 +28,8 @@ OpenAI or Groq API key for AI-assisted workflows (BYOK: bring your own key).
   its requirements change.
 - Ranks ready CVs and explains truthful tailoring opportunities.
 - Stores reusable Application Kit answers and contact/application details.
-- Exports a user's structured account data and supports account deletion.
+- Exports a ZIP containing structured account data and original CV files, and
+  supports account deletion.
 - Lets a user validate, replace, or remove an encrypted OpenAI or Groq key.
 
 Missing evidence is represented as uncertainty, not as proof that a user lacks

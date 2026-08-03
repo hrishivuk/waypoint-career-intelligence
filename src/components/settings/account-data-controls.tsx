@@ -32,7 +32,7 @@ export function AccountDataControls() {
   return <div className="space-y-6">
     <section className="rounded-xl border border-slate-200 bg-white p-5">
       <h2 className="font-semibold text-slate-950">Export your information</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">Download your structured Waypoint data as JSON. Provider credentials and private storage paths are never included.</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">Download a ZIP containing your structured Waypoint data and original CV files. Provider credentials and private storage paths are never included.</p>
       <a href="/api/v1/account/export" className={`${buttonStyles.secondary} mt-4`}>Download account export</a>
     </section>
     <section className="rounded-xl border border-red-200 bg-red-50 p-5">

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { strToU8, zipSync } from "fflate";
 
 const OWNED_EXPORT_TABLES = [
   "career_modes",
@@ -85,6 +86,58 @@ export async function buildAccountExport(
     sourceDocuments: documents.data ?? [],
     records,
   };
+}
+
+export async function buildAccountArchive(
+  client: SupabaseClient,
+  actor: { userId: string; authUserId: string; email: string | null },
+) {
+  const exported = await buildAccountExport(client, actor);
+  const sourceRows = await client
+    .from("cv_documents_v2")
+    .select("id,original_filename,storage_bucket,storage_path")
+    .eq("user_id", actor.userId)
+    .order("created_at");
+  if (sourceRows.error) throw sourceRows.error;
+
+  const sources: Array<{ id: string; filename: string; bytes: Uint8Array }> = [];
+  for (const row of sourceRows.data ?? []) {
+    const downloaded = await client.storage
+      .from(String(row.storage_bucket))
+      .download(String(row.storage_path));
+    if (downloaded.error || !downloaded.data) {
+      throw downloaded.error ?? new Error("A source document could not be exported.");
+    }
+    sources.push({
+      id: String(row.id),
+      filename: String(row.original_filename),
+      bytes: new Uint8Array(await downloaded.data.arrayBuffer()),
+    });
+  }
+  return createAccountArchive(exported, sources);
+}
+
+export function createAccountArchive(
+  exported: Awaited<ReturnType<typeof buildAccountExport>>,
+  sources: Array<{ id: string; filename: string; bytes: Uint8Array }>,
+) {
+  const files: Record<string, Uint8Array> = {
+    "account.json": strToU8(`${JSON.stringify(exported, null, 2)}\n`),
+  };
+  for (const source of sources) {
+    files[`source-documents/${source.id}-${safeArchiveFilename(source.filename)}`] = source.bytes;
+  }
+  return zipSync(files, { level: 6 });
+}
+
+function safeArchiveFilename(value: string) {
+  const filename = value
+    .normalize("NFKC")
+    .replace(/[\\/\0-\x1f\x7f]+/g, "-")
+    .replace(/\.{2,}/g, ".")
+    .replace(/^\.+/, "")
+    .slice(0, 180);
+  return filename || "document";
 }
 
 function withoutStorageLocation(row: Record<string, unknown>) {

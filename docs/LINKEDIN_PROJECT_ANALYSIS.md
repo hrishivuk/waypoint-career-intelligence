@@ -120,7 +120,8 @@ AI-derived personal facts reviewable.
 
 ### Account lifecycle
 
-- Structured JSON export without AI credentials or private storage paths.
+- Portable ZIP export containing structured JSON and original CV files without
+  AI credentials or private storage paths.
 - Typed destructive confirmation.
 - Recent-sign-in requirement for account deletion.
 - Storage cleanup, application-data cascade, encrypted-credential removal, and
@@ -195,7 +196,7 @@ The final pre-publish run must update this table with its date and commit SHA.
 | --- | --- | --- |
 | TypeScript | Passing | Compile-time contracts are consistent. |
 | ESLint | Passing | Configured static rules pass. |
-| Unit/security suite | 135 tests across 30 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
+| Unit/security suite | 136 tests across 30 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
 | Real PDF parser test | Passing | Lazy-loaded PDF.js extracts a generated text PDF. |
 | Playwright public smoke | 3 tests passing | Landing, auth/legal pages, and safe health response. |
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |

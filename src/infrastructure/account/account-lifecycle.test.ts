@@ -1,9 +1,36 @@
 import { describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { strFromU8, unzipSync } from "fflate";
 
 vi.mock("server-only", () => ({}));
 
-import { deleteAccountData } from "./account-lifecycle";
+import { createAccountArchive, deleteAccountData } from "./account-lifecycle";
+
+describe("account export archive", () => {
+  it("contains structured JSON and sanitised source-document filenames", () => {
+    const exported = {
+      format: "waypoint-account-export",
+      version: 1,
+      exportedAt: "2026-08-03T12:00:00.000Z",
+      account: { authUserId: "auth-1", email: "user@example.com", profile: { id: "user-1" } },
+      sourceDocuments: [],
+      records: {},
+    } as never;
+    const archive = unzipSync(createAccountArchive(exported, [{
+      id: "cv-1",
+      filename: "../../private/resume.pdf",
+      bytes: new Uint8Array([1, 2, 3]),
+    }]));
+
+    expect(JSON.parse(strFromU8(archive["account.json"]))).toMatchObject({
+      format: "waypoint-account-export",
+      account: { email: "user@example.com" },
+    });
+    const sourceName = Object.keys(archive).find((name) => name.startsWith("source-documents/"));
+    expect(sourceName).toContain("cv-1-");
+    expect(sourceName).not.toContain("..");
+  });
+});
 
 describe("deleteAccountData", () => {
   it("removes nested storage objects before application data and auth identity", async () => {
