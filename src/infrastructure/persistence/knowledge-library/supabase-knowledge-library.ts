@@ -4,7 +4,7 @@ import type {
   KnowledgeLibraryItem,
   KnowledgeLibrarySection,
 } from "@/application/knowledge-library";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface SectionDefinition {
   table: string;
@@ -119,10 +119,10 @@ const definitions: SectionDefinition[] = [
 ];
 
 export async function loadKnowledgeLibrary(
+  client: SupabaseClient,
   userId: string,
   sectionKeys?: readonly string[],
 ): Promise<KnowledgeLibrarySection[]> {
-  const client = getSupabaseServerClient();
   const { data: masterProfile, error: masterProfileError } = await client
     .from("master_profile_records")
     .select("*")

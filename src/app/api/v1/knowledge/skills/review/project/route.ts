@@ -1,11 +1,10 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function POST(request: Request) {
   const redirect = new URL("/knowledge/skills/review", request.url);
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
-    const client = getSupabaseServerClient();
+    const { actor, client } = await requireAuthenticatedContext();
     const { data: batches, error: batchError } = await client
       .from("skill_model_review_batches")
       .select("id")
@@ -16,7 +15,7 @@ export async function POST(request: Request) {
     const batch = batches?.[0];
     if (!batch) throw new Error("No staged skill review batch was found.");
 
-    const { data, error } = await client.rpc("project_skill_model_review", {
+    const { data, error } = await getSupabaseServerClient().rpc("project_skill_model_review", {
       requested_batch_id: batch.id,
       requested_user_id: actor.userId,
     });

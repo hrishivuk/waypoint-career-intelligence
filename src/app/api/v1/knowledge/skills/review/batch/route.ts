@@ -1,14 +1,12 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 const levels = ["learning", "basic", "working", "strong", "expert"];
 
 export async function POST(request: Request) {
   const redirect = new URL("/knowledge/skills/review", request.url);
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const form = await request.formData();
-    const client = getSupabaseServerClient();
     const { data: batches, error: batchError } = await client
       .from("skill_model_review_batches")
       .select("id")

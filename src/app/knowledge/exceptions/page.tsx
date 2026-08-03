@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageContainer, PageHeader, buttonStyles } from "@/components/ui";
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export const metadata: Metadata = {
   title: "Knowledge exceptions",
@@ -12,8 +11,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KnowledgeExceptionsPage() {
-  const actor = await new SupabaseIdentityProvider().getActor();
-  const { data, error } = await getSupabaseServerClient()
+  const { actor, client } = await requireAuthenticatedContext();
+  const { data, error } = await client
     .from("knowledge_exceptions")
     .select("id,reason,status,candidate,details,created_at")
     .eq("user_id", actor.userId)

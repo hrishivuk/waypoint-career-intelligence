@@ -1,9 +1,11 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import {
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 
 export async function POST(request: Request) {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const body = (await request.json()) as {
       kind?: unknown;
       names?: unknown;
@@ -26,7 +28,6 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const client = getSupabaseServerClient();
     const now = new Date().toISOString();
     const sourceRef = {
       entered_by: "user",
@@ -165,6 +166,12 @@ export async function POST(request: Request) {
     }
     return Response.json({ saved });
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json(
+        { error: { message: "Authentication required." } },
+        { status: 401 },
+      );
+    }
     console.error("Knowledge correction failed", {
       message: error instanceof Error ? error.message : "Unknown error",
     });

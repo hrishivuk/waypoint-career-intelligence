@@ -5,13 +5,22 @@ import {
   ListActiveHandoverReview,
   ReviewHandoverCandidate,
 } from "@/application/handover-review";
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { SupabaseHandoverReviewRepository } from "@/infrastructure/persistence/handover-review";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { AuthenticationRequiredError } from "@/infrastructure/auth/supabase-identity";
+import {
+  SupabaseHandoverReviewDataClient,
+  SupabaseHandoverReviewRepository,
+} from "@/infrastructure/persistence/handover-review";
 
-const repository = new SupabaseHandoverReviewRepository();
-export const identityProvider = new SupabaseIdentityProvider();
-export const listActiveReview = new ListActiveHandoverReview(repository);
-export const reviewCandidate = new ReviewHandoverCandidate(repository);
+export function createReviewServices(client: SupabaseClient) {
+  const repository = new SupabaseHandoverReviewRepository(
+    new SupabaseHandoverReviewDataClient(client),
+  );
+  return {
+    listActiveReview: new ListActiveHandoverReview(repository),
+    reviewCandidate: new ReviewHandoverCandidate(repository),
+  };
+}
 
 export function reviewApiError(
   status: number,
@@ -42,6 +51,9 @@ export async function readReviewJson(request: Request): Promise<unknown> {
 export class InvalidReviewJsonError extends Error {}
 
 export function handleReviewApiError(error: unknown): Response {
+  if (error instanceof AuthenticationRequiredError) {
+    return reviewApiError(401, "AUTHENTICATION_REQUIRED", "Authentication required.");
+  }
   if (error instanceof InvalidReviewJsonError) {
     return reviewApiError(400, "INVALID_JSON", "Request body must be valid JSON.");
   }

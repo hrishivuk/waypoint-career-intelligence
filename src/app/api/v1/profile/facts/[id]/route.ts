@@ -3,11 +3,11 @@ import { z } from "zod";
 import {
   apiError,
   handleProfileApiError,
-  identityProvider,
+  createProfileServices,
   profileFactConfirmationSchema,
   readJson,
-  updateProfileFactValue,
 } from "../../_shared";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +48,8 @@ export async function PATCH(
       );
     }
 
-    const actor = await identityProvider.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
+    const { updateProfileFactValue } = createProfileServices(client);
     const fact = await updateProfileFactValue.execute({
       candidateId: actor.userId,
       factId: parsedId.data,

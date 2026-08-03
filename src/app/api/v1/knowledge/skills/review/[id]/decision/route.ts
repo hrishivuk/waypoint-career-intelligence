@@ -1,5 +1,4 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export async function POST(
   request: Request,
@@ -7,7 +6,7 @@ export async function POST(
 ) {
   const redirect = new URL("/knowledge/skills/review", request.url);
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const { id } = await params;
     const form = await request.formData();
     const decision = String(form.get("decision") ?? "");
@@ -24,7 +23,7 @@ export async function POST(
       return Response.redirect(redirect, 303);
     }
     const now = new Date().toISOString();
-    const { error } = await getSupabaseServerClient()
+    const { error } = await client
       .from("skill_model_review_items")
       .update({
         review_status: decision,

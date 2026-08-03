@@ -1,9 +1,11 @@
 import { z } from "zod";
 
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import {
+  AccountProvisioningRequiredError,
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 
-const identity = new SupabaseIdentityProvider();
 const reviewSchema = z.object({
   decisions: z.array(
     z.object({
@@ -26,9 +28,8 @@ export async function PATCH(
         { status: 400 },
       );
     }
-    const actor = await identity.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const { id } = await params;
-    const client = getSupabaseServerClient();
     for (const decision of parsed.data.decisions) {
       const { error } = await client
         .from("career_narrative_candidates")
@@ -49,6 +50,18 @@ export async function PATCH(
     }
     return Response.json({ activated });
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json(
+        { error: { message: "Authentication required." } },
+        { status: 401 },
+      );
+    }
+    if (error instanceof AccountProvisioningRequiredError) {
+      return Response.json(
+        { error: { message: "Your Waypoint account is still being prepared." } },
+        { status: 503 },
+      );
+    }
     console.error("Career narrative review failed", error);
     return Response.json(
       { error: { message: "The narrative review could not be saved." } },

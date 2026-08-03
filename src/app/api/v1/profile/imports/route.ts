@@ -6,22 +6,23 @@ import {
   safeAiErrorMessage,
   type CareerNarrativeExtraction,
 } from "@/infrastructure/ai";
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import {
+  AccountProvisioningRequiredError,
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 import { createDocumentTextBlocks } from "@/infrastructure/documents";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 import { consumeUsage } from "@/infrastructure/usage/consume-usage";
 
 export const dynamic = "force-dynamic";
 
-const identity = new SupabaseIdentityProvider();
 const createSchema = z.object({
   narrative: z.string().trim().min(100).max(12_000),
 });
 
 export async function GET() {
   try {
-    const actor = await identity.getActor();
-    const client = getSupabaseServerClient();
+    const { actor, client } = await requireAuthenticatedContext();
     const { data: imports, error } = await client
       .from("career_narrative_imports")
       .select("id,status,created_at,activated_at")
@@ -60,9 +61,8 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const actor = await identity.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     await consumeUsage(actor.userId, "imports");
-    const client = getSupabaseServerClient();
     const { data: existingProfile, error: profileError } = await client
       .from("master_profile_records")
       .select("id,record_type,title,statement,structured_data")
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         record,
       ]),
     );
-    const ai = await createUserCareerAiGateway(actor.userId);
+    const ai = await createUserCareerAiGateway(client, actor.userId);
     const extractedRecords: CareerNarrativeExtraction["records"] = [];
     const accountedBlockIds = new Set<string>();
     const warnings: string[] = [];
@@ -333,6 +333,18 @@ function selectRelevantProfileRecords(
 }
 
 function importError(error: unknown) {
+  if (error instanceof AuthenticationRequiredError) {
+    return Response.json(
+      { error: { message: "Authentication required." } },
+      { status: 401 },
+    );
+  }
+  if (error instanceof AccountProvisioningRequiredError) {
+    return Response.json(
+      { error: { message: "Your Waypoint account is still being prepared." } },
+      { status: 503 },
+    );
+  }
   console.error("Career narrative import failed", { category: error instanceof Error ? error.name : "UnknownError" });
   return Response.json(
     {

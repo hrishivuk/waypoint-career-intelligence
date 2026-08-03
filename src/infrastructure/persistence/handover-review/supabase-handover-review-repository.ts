@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   HandoverReviewConflictError,
@@ -7,7 +8,6 @@ import {
   type HandoverReviewRepository,
   type StagedReviewCandidate,
 } from "../../../application/handover-review";
-import { getSupabaseServerClient } from "../supabase-server";
 
 interface ImportRunRow {
   id: string;
@@ -47,8 +47,7 @@ export class SupabaseHandoverReviewRepository
   implements HandoverReviewRepository
 {
   constructor(
-    private readonly data: HandoverReviewDataClient =
-      new SupabaseHandoverReviewDataClient(),
+    private readonly data: HandoverReviewDataClient,
   ) {}
 
   async findActive(candidateId: string): Promise<ActiveHandoverReview> {
@@ -115,8 +114,8 @@ export class SupabaseHandoverReviewRepository
   }
 }
 
-class SupabaseHandoverReviewDataClient implements HandoverReviewDataClient {
-  private readonly client = getSupabaseServerClient();
+export class SupabaseHandoverReviewDataClient implements HandoverReviewDataClient {
+  constructor(private readonly client: SupabaseClient) {}
 
   async findActiveRun(candidateId: string): Promise<ImportRunRow | null> {
     const { data, error } = await this.client

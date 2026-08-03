@@ -2,11 +2,11 @@ import { z } from "zod";
 
 import {
   handleReviewApiError,
-  identityProvider,
+  createReviewServices,
   readReviewJson,
   reviewApiError,
-  reviewCandidate,
 } from "../_shared";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,8 @@ export async function PATCH(
         parsed.error.flatten(),
       );
     }
-    const actor = await identityProvider.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
+    const { reviewCandidate } = createReviewServices(client);
     const candidate = await reviewCandidate.execute({
       candidateId: actor.userId,
       stagedCandidateId: parsedId.data,

@@ -72,7 +72,7 @@ The repository follows a layered structure:
 
 Requirements:
 
-- Node.js 20.19 or newer (Node.js 22 LTS recommended)
+- Node.js 22 or newer
 - npm
 - A Supabase project, or Supabase CLI plus Docker for a local database
 

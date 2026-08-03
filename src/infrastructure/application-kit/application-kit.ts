@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type Row = Record<string, unknown>;
 
@@ -19,15 +19,14 @@ export interface ApplicationKitSection {
   }>;
 }
 
-export async function loadApplicationKit(userId: string) {
-  const client = getSupabaseServerClient();
+export async function loadApplicationKit(client: SupabaseClient, userId: string) {
   const existing = await client
     .from("application_kit_sections")
     .select("id")
     .eq("user_id", userId)
     .limit(1);
   if (existing.error) throw existing.error;
-  if (!existing.data?.length) await seedApplicationKit(userId);
+  if (!existing.data?.length) await seedApplicationKit(client, userId);
 
   const { data, error } = await client
     .from("application_kit_sections")
@@ -38,8 +37,7 @@ export async function loadApplicationKit(userId: string) {
   return ((data ?? []) as Row[]).map(serializeSection);
 }
 
-async function seedApplicationKit(userId: string) {
-  const client = getSupabaseServerClient();
+async function seedApplicationKit(client: SupabaseClient, userId: string) {
   const [{ data: profile, error: profileError }, { data: cvs, error: cvError }] =
     await Promise.all([
       client

@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 import { consumeUsage } from "@/infrastructure/usage/consume-usage";
 
@@ -22,10 +23,13 @@ export class AiConsentRequiredError extends Error {
   }
 }
 
-export async function createUserCareerAiGateway(userId: string): Promise<CareerAiGateway> {
-  const client = getSupabaseServerClient();
-  const repository = new UserCredentialRepository(client, userId);
-  const { data: state, error } = await client
+export async function createUserCareerAiGateway(
+  authenticatedClient: SupabaseClient,
+  userId: string,
+): Promise<CareerAiGateway> {
+  const admin = getSupabaseServerClient();
+  const repository = new UserCredentialRepository(admin, userId);
+  const { data: state, error } = await authenticatedClient
     .from("user_onboarding_state")
     .select("preferred_ai_provider,ai_data_processing_accepted_at")
     .eq("user_id", userId)

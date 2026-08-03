@@ -1,7 +1,9 @@
 import { z } from "zod";
 
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import {
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 
 const bodySchema = z.object({
   criticality: z.enum([
@@ -19,7 +21,7 @@ export async function PATCH(
   context: { params: Promise<{ analysisId: string; index: string }> },
 ) {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const { analysisId, index: rawIndex } = await context.params;
     const index = Number(rawIndex);
     if (!Number.isInteger(index) || index < 0) {
@@ -29,7 +31,6 @@ export async function PATCH(
       );
     }
     const body = bodySchema.parse(await request.json());
-    const client = getSupabaseServerClient();
     const { data: analysis, error: analysisError } = await client
       .from("analyses")
       .select("job_id")
@@ -78,6 +79,12 @@ export async function PATCH(
     if (error) throw error;
     return Response.json({ updated: true });
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json(
+        { error: { message: "Authentication required." } },
+        { status: 401 },
+      );
+    }
     return Response.json(
       {
         error: {

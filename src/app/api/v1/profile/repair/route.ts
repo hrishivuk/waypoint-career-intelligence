@@ -5,20 +5,21 @@ import {
   safeAiErrorMessage,
   type CareerNarrativeExtraction,
 } from "@/infrastructure/ai";
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import {
+  AccountProvisioningRequiredError,
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 import { createDocumentTextBlocks } from "@/infrastructure/documents";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-const identity = new SupabaseIdentityProvider();
 const REPAIR_VERSION = "master-profile-coverage-v1";
 
 export async function POST() {
   try {
-    const actor = await identity.getActor();
-    const client = getSupabaseServerClient();
+    const { actor, client } = await requireAuthenticatedContext();
     const [{ data: imports, error: importsError }, profileResult] =
       await Promise.all([
         client
@@ -75,7 +76,7 @@ export async function POST() {
         record,
       ]),
     );
-    const ai = await createUserCareerAiGateway(actor.userId);
+    const ai = await createUserCareerAiGateway(client, actor.userId);
     const records: CareerNarrativeExtraction["records"] = [];
     const accounted = new Set<string>();
     const metadata: Array<Record<string, unknown>> = [];
@@ -222,6 +223,9 @@ export async function POST() {
       .from("career_narrative_candidates")
       .insert(candidates);
     if (candidateError) throw candidateError;
+    // Activation is the sole elevated operation in this route. The RPC is
+    // explicitly granted only to service_role and performs an atomic,
+    // ownership-checked reconciliation.
     const { data: activated, error: activationError } = await client.rpc(
       "activate_career_narrative_import_v2",
       { p_user_id: actor.userId, p_import_id: repairImport.id },
@@ -236,6 +240,18 @@ export async function POST() {
       ).length,
     });
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json(
+        { error: { message: "Authentication required." } },
+        { status: 401 },
+      );
+    }
+    if (error instanceof AccountProvisioningRequiredError) {
+      return Response.json(
+        { error: { message: "Your Waypoint account is still being prepared." } },
+        { status: 503 },
+      );
+    }
     console.error("Master Profile repair failed", { category: error instanceof Error ? error.name : "UnknownError" });
     return Response.json(
       {

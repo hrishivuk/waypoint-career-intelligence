@@ -1,10 +1,8 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export async function GET() {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
-    const client = getSupabaseServerClient();
+    const { actor, client } = await requireAuthenticatedContext();
     const { data: batches, error: batchError } = await client
       .from("skill_model_review_batches")
       .select("id,status,source_name,created_at")
@@ -33,7 +31,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const body = (await request.json()) as {
       id?: unknown;
       decision?: unknown;
@@ -42,7 +40,6 @@ export async function PATCH(request: Request) {
       action?: unknown;
     };
     if (body.action === "confirm_all_non_conflicting") {
-      const client = getSupabaseServerClient();
       const { data: pending, error: pendingError } = await client
         .from("skill_model_review_items")
         .select("id,blocker_codes,proposed_level")
@@ -92,7 +89,6 @@ export async function PATCH(request: Request) {
         { status: 400 },
       );
     }
-    const client = getSupabaseServerClient();
     const { data, error } = await client
       .from("skill_model_review_items")
       .update({

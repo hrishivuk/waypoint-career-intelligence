@@ -1,18 +1,20 @@
 import { createHash, randomUUID } from "node:crypto";
 
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import {
+  AccountProvisioningRequiredError,
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 import { parseCvDeterministically } from "@/infrastructure/cv/deterministic-cv-parser";
 import {
   DOCX_MIME_TYPE,
   PDF_MIME_TYPE,
 } from "@/infrastructure/documents/document-text-extractor";
 import { createDocumentTextExtractor } from "@/infrastructure/documents/create-document-text-extractor";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 import { assertStorageAllowance, consumeUsage } from "@/infrastructure/usage/consume-usage";
 
 export const dynamic = "force-dynamic";
 
-const identity = new SupabaseIdentityProvider();
 const BUCKET = "career-documents";
 const MAX_BYTES = 10 * 1024 * 1024;
 const acceptedTypes = new Set([PDF_MIME_TYPE, DOCX_MIME_TYPE]);
@@ -53,8 +55,8 @@ function serialize(document: Record<string, unknown>) {
 
 export async function GET() {
   try {
-    const { userId } = await identity.getActor();
-    const supabase = getSupabaseServerClient();
+    const { actor: { userId }, client: supabase } =
+      await requireAuthenticatedContext();
     const { data, error } = await supabase
       .from("cv_documents_v2")
       .select("*, cv_sections_v2(*), cv_claims_v2(*)")
@@ -63,6 +65,8 @@ export async function GET() {
     if (error) throw error;
     return Response.json({ cvs: (data ?? []).map(serialize) });
   } catch (error) {
+    const authResponse = authenticationErrorResponse(error);
+    if (authResponse) return authResponse;
     console.error("CV v2 list failed", error);
     return Response.json(
       { error: "Unable to load CVs. Make sure the CV System v2 migration has been run." },
@@ -72,11 +76,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = getSupabaseServerClient();
+  let supabase: Awaited<ReturnType<typeof requireAuthenticatedContext>>["client"] | null = null;
   let uploadedPath: string | null = null;
   let documentId: string | null = null;
   try {
-    const { userId } = await identity.getActor();
+    const context = await requireAuthenticatedContext();
+    const { userId } = context.actor;
+    supabase = context.client;
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) {
@@ -193,8 +199,14 @@ export async function POST(request: Request) {
     return Response.json({ cv: serialize(data) }, { status: 201 });
   } catch (error) {
     console.error("CV v2 upload failed", error);
-    if (documentId) await supabase.from("cv_documents_v2").delete().eq("id", documentId);
-    if (uploadedPath) await supabase.storage.from(BUCKET).remove([uploadedPath]);
+    if (documentId && supabase) {
+      await supabase.from("cv_documents_v2").delete().eq("id", documentId);
+    }
+    if (uploadedPath && supabase) {
+      await supabase.storage.from(BUCKET).remove([uploadedPath]);
+    }
+    const authResponse = authenticationErrorResponse(error);
+    if (authResponse) return authResponse;
     const duplicate = typeof error === "object" && error !== null &&
       "code" in error && error.code === "23505";
     return Response.json(
@@ -202,6 +214,19 @@ export async function POST(request: Request) {
       { status: duplicate ? 409 : 500 },
     );
   }
+}
+
+function authenticationErrorResponse(error: unknown) {
+  if (error instanceof AuthenticationRequiredError) {
+    return Response.json({ error: "Authentication required." }, { status: 401 });
+  }
+  if (error instanceof AccountProvisioningRequiredError) {
+    return Response.json(
+      { error: "Your Waypoint account is still being prepared." },
+      { status: 503 },
+    );
+  }
+  return null;
 }
 
 function hasExpectedSignature(bytes: Uint8Array, mimeType: string) {

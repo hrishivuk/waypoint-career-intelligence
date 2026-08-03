@@ -1,10 +1,10 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { safeAiErrorMessage } from "@/infrastructure/ai";
 import { analyzeJobDescription } from "@/infrastructure/job-analysis/analyze-job-description";
 
 export async function POST(request: Request) {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const body = (await request.json()) as {
       description?: unknown;
       force?: unknown;
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       );
     }
     return Response.json(
-      await analyzeJobDescription(actor.userId, body.description, {
+      await analyzeJobDescription(client, actor.userId, body.description, {
         force: body.force === true,
         reparse: body.reparse === true,
       }),

@@ -2,13 +2,12 @@ import { z } from "zod";
 
 import {
   apiError,
-  createManualProfileFact,
+  createProfileServices,
   handleProfileApiError,
-  identityProvider,
-  listProfileFacts,
   profileFactCategorySchema,
   readJson,
 } from "../_shared";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +21,8 @@ const createProfileFactSchema = z
 
 export async function GET() {
   try {
-    const actor = await identityProvider.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
+    const { listProfileFacts } = createProfileServices(client);
     const result = await listProfileFacts.execute(actor.userId);
     return Response.json(result);
   } catch (error) {
@@ -42,7 +42,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const actor = await identityProvider.getActor();
+    const { actor, client } = await requireAuthenticatedContext();
+    const { createManualProfileFact } = createProfileServices(client);
     const fact = await createManualProfileFact.execute({
       candidateId: actor.userId,
       ...parsed.data,

@@ -73,7 +73,10 @@ export async function DELETE(request: Request) {
     const { actor } = await requireAuthenticatedContext();
     await new UserCredentialRepository(getSupabaseServerClient(), actor.userId).remove(parsed.data.provider);
     return Response.json({ ok: true }, { headers: noStore });
-  } catch {
+  } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json({ error: "Authentication required." }, { status: 401, headers: noStore });
+    }
     return Response.json({ error: "Unable to remove the provider key." }, { status: 500, headers: noStore });
   }
 }

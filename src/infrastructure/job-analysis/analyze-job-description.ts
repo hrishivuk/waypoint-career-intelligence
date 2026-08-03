@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createHash, randomUUID } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   JobAnalysisResult,
@@ -13,12 +14,12 @@ import {
   type JobDescriptionParsing,
   type SemanticRequirementMatching,
 } from "@/infrastructure/ai";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 type Row = Record<string, unknown>;
 const ANALYSIS_ENGINE_VERSION = "waypoint-intelligence-v5-cv2";
 
 export async function analyzeJobDescription(
+  client: SupabaseClient,
   userId: string,
   description: string,
   options: { force?: boolean; reparse?: boolean } = {},
@@ -28,16 +29,16 @@ export async function analyzeJobDescription(
     throw new Error("Paste a fuller job description before analysing it.");
   }
 
-  const knowledge = await loadKnowledge(userId);
+  const knowledge = await loadKnowledge(client, userId);
   const cached = options.force
     ? null
-    : await findCachedAnalysis(userId, cleaned, knowledge.fingerprint);
+    : await findCachedAnalysis(client, userId, cleaned, knowledge.fingerprint);
   if (cached) return cached;
 
   const storedParsed = options.force && !options.reparse
-    ? await findStoredParsedJob(userId, cleaned)
+    ? await findStoredParsedJob(client, userId, cleaned)
     : null;
-  const ai = await createUserCareerAiGateway(userId);
+  const ai = await createUserCareerAiGateway(client, userId);
   let parsingFallback = false;
   let parsed;
   if (storedParsed) {
@@ -147,7 +148,7 @@ export async function analyzeJobDescription(
     blockers.length,
     gaps.length,
   );
-  const ids = await persistAnalysis({
+  const ids = await persistAnalysis(client, {
     userId,
     description: cleaned,
     parsed: parsedJob,
@@ -202,13 +203,13 @@ export async function analyzeJobDescription(
 }
 
 async function findStoredParsedJob(
+  client: SupabaseClient,
   userId: string,
   description: string,
 ): Promise<{
   parsed: JobDescriptionParsing;
   criticalities: Array<JobRequirementResult["criticality"]>;
 } | null> {
-  const client = getSupabaseServerClient();
   const { data: jobs, error } = await client
     .from("jobs")
     .select("id,title,company,description_text,created_at")
@@ -349,11 +350,11 @@ function storedRequirementKind(kind: string) {
 }
 
 async function findCachedAnalysis(
+  client: SupabaseClient,
   userId: string,
   description: string,
   knowledgeFingerprint: string,
 ): Promise<JobAnalysisResult | null> {
-  const client = getSupabaseServerClient();
   const { data: jobs, error: jobError } = await client
     .from("jobs")
     .select("id,title,company,description_text,created_at")
@@ -414,8 +415,7 @@ async function findCachedAnalysis(
   };
 }
 
-async function loadKnowledge(userId: string) {
-  const client = getSupabaseServerClient();
+async function loadKnowledge(client: SupabaseClient, userId: string) {
   const [
     masterProfileResult,
     skillsResult,
@@ -1787,7 +1787,7 @@ function assessEligibility(requirements: JobRequirementResult[]) {
   return { score: 100 };
 }
 
-async function persistAnalysis(input: {
+async function persistAnalysis(client: SupabaseClient, input: {
   userId: string;
   description: string;
   parsed: JobDescriptionParsing;
@@ -1811,7 +1811,6 @@ async function persistAnalysis(input: {
   bestCv: JobAnalysisResult["bestCv"];
   knowledgeFingerprint: string;
 }) {
-  const client = getSupabaseServerClient();
   const jobId = randomUUID();
   const analysisId = randomUUID();
   const { error: jobError } = await client.from("jobs").insert({

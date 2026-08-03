@@ -1,4 +1,5 @@
 import "server-only";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
   ProfileFactRepository,
@@ -8,7 +9,6 @@ import type {
   FactConfirmation,
   ProfileFactCategory,
 } from "@/domain/profile";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 type DatabaseStatus =
   | "candidate"
@@ -37,9 +37,10 @@ const selection =
 export class SupabaseProfileFactRepository
   implements ProfileFactRepository
 {
+  constructor(private readonly client: SupabaseClient) {}
+
   async listByCandidateId(candidateId: string): Promise<StoredProfileFact[]> {
-    await this.ensurePrototypeUser(candidateId);
-    const { data, error } = await getSupabaseServerClient()
+    const { data, error } = await this.client
       .from("career_profile_facts")
       .select(selection)
       .eq("user_id", candidateId)
@@ -53,8 +54,7 @@ export class SupabaseProfileFactRepository
     candidateId: string,
     factId: string,
   ): Promise<StoredProfileFact | null> {
-    await this.ensurePrototypeUser(candidateId);
-    const { data, error } = await getSupabaseServerClient()
+    const { data, error } = await this.client
       .from("career_profile_facts")
       .select(selection)
       .eq("user_id", candidateId)
@@ -66,8 +66,7 @@ export class SupabaseProfileFactRepository
   }
 
   async create(fact: StoredProfileFact): Promise<StoredProfileFact> {
-    await this.ensurePrototypeUser(fact.candidateId);
-    const { data, error } = await getSupabaseServerClient()
+    const { data, error } = await this.client
       .from("career_profile_facts")
       .insert(toDatabaseRecord(fact))
       .select(selection)
@@ -78,9 +77,8 @@ export class SupabaseProfileFactRepository
   }
 
   async update(fact: StoredProfileFact): Promise<StoredProfileFact> {
-    await this.ensurePrototypeUser(fact.candidateId);
     const record = toDatabaseRecord(fact);
-    const { data, error } = await getSupabaseServerClient()
+    const { data, error } = await this.client
       .from("career_profile_facts")
       .update({
         value: record.value,
@@ -98,16 +96,6 @@ export class SupabaseProfileFactRepository
       throw new Error("Profile fact disappeared during update.");
     }
     return mapRow(data as ProfileFactRow);
-  }
-
-  private async ensurePrototypeUser(candidateId: string): Promise<void> {
-    const { error } = await getSupabaseServerClient()
-      .from("prototype_users")
-      .upsert(
-        { id: candidateId, display_name: "Prototype User" },
-        { onConflict: "id", ignoreDuplicates: true },
-      );
-    if (error) throw persistenceError("initialize prototype user", error);
   }
 }
 

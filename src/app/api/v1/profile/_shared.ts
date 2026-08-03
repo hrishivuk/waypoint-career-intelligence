@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   CreateManualProfileFact,
@@ -8,7 +9,7 @@ import {
   ProfileFactNotFoundError,
   UpdateProfileFactValue,
 } from "@/application/profile";
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import { AuthenticationRequiredError } from "@/infrastructure/auth/supabase-identity";
 import { SupabaseProfileFactRepository } from "@/infrastructure/persistence/profile";
 
 export const profileFactCategorySchema = z.enum([
@@ -29,19 +30,19 @@ export const profileFactConfirmationSchema = z.enum([
   "rejected",
 ]);
 
-export const identityProvider = new SupabaseIdentityProvider();
-export const profileFactRepository = new SupabaseProfileFactRepository();
 const systemClock = { now: () => new Date() };
-export const listProfileFacts = new ListProfileFacts(profileFactRepository);
-export const createManualProfileFact = new CreateManualProfileFact({
-  facts: profileFactRepository,
-  ids: { generate: () => crypto.randomUUID() },
-  clock: systemClock,
-});
-export const updateProfileFactValue = new UpdateProfileFactValue({
-  facts: profileFactRepository,
-  clock: systemClock,
-});
+export function createProfileServices(client: SupabaseClient) {
+  const facts = new SupabaseProfileFactRepository(client);
+  return {
+    listProfileFacts: new ListProfileFacts(facts),
+    createManualProfileFact: new CreateManualProfileFact({
+      facts,
+      ids: { generate: () => crypto.randomUUID() },
+      clock: systemClock,
+    }),
+    updateProfileFactValue: new UpdateProfileFactValue({ facts, clock: systemClock }),
+  };
+}
 
 export function apiError(
   status: number,
@@ -72,6 +73,9 @@ export async function readJson(request: Request): Promise<unknown> {
 export class InvalidJsonError extends Error {}
 
 export function handleProfileApiError(error: unknown): Response {
+  if (error instanceof AuthenticationRequiredError) {
+    return apiError(401, "AUTHENTICATION_REQUIRED", "Authentication required.");
+  }
   if (error instanceof InvalidJsonError) {
     return apiError(400, "INVALID_JSON", "Request body must be valid JSON.");
   }

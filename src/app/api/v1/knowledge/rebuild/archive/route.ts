@@ -1,9 +1,9 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
+import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export async function POST() {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor } = await requireAuthenticatedContext();
     const { data, error } = await getSupabaseServerClient().rpc(
       "archive_waypoint_knowledge_v1",
       {

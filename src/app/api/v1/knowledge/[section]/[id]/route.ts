@@ -1,5 +1,9 @@
-import { SupabaseIdentityProvider } from "@/infrastructure/auth/supabase-identity";
-import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import {
+  AuthenticationRequiredError,
+  requireAuthenticatedContext,
+} from "@/infrastructure/auth/supabase-identity";
 
 const sectionTables = {
   "stable-facts": "career_profile_facts",
@@ -11,10 +15,9 @@ export async function PATCH(
   { params }: { params: Promise<{ section: string; id: string }> },
 ) {
   try {
-    const actor = await new SupabaseIdentityProvider().getActor();
+    const { actor, client } = await requireAuthenticatedContext();
     const { section, id } = await params;
     const body = (await request.json()) as Record<string, unknown>;
-    const client = getSupabaseServerClient();
     const { data: masterRecord, error: masterLoadError } = await client
       .from("master_profile_records")
       .select("*")
@@ -90,6 +93,7 @@ export async function PATCH(
     if (error) throw error;
     if (section === "skills") {
       await updateCapabilityLevel(
+        client,
         actor.userId,
         id,
         body.capabilityLevel,
@@ -97,6 +101,12 @@ export async function PATCH(
     }
     return Response.json({ record: data });
   } catch (error) {
+    if (error instanceof AuthenticationRequiredError) {
+      return Response.json(
+        { error: { message: "Authentication required." } },
+        { status: 401 },
+      );
+    }
     console.error("Knowledge edit failed", {
       message: error instanceof Error ? error.message : "Unknown error",
     });
@@ -127,6 +137,7 @@ function slug(value: string) {
 }
 
 async function updateCapabilityLevel(
+  client: SupabaseClient,
   userId: string,
   skillId: string,
   value: unknown,
@@ -136,7 +147,6 @@ async function updateCapabilityLevel(
   if (level !== "not_assessed" && !allowed.includes(level)) {
     throw new Error("The skill level is invalid.");
   }
-  const client = getSupabaseServerClient();
   const { data: existing, error: loadError } = await client
     .from("capability_assessments")
     .select("id")
