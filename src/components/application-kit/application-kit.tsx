@@ -1,15 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  Check,
+  Copy as CopyIcon,
+  Inbox,
+  Layers3,
+  Pencil,
+  Sparkles,
+} from "lucide-react";
 
 import type { ApplicationKitSection } from "@/infrastructure/application-kit/application-kit";
-import { buttonStyles } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ApplicationKit() {
   const [sections, setSections] = useState<ApplicationKitSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copyError, setCopyError] = useState<string | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<string | null>(null);
 
@@ -29,9 +42,17 @@ export function ApplicationKit() {
   }, []);
 
   async function copy(id: string, value: string) {
-    await navigator.clipboard.writeText(value);
-    setCopiedId(id);
-    window.setTimeout(() => setCopiedId((current) => current === id ? null : current), 1600);
+    setCopyError(null);
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedId(id);
+      window.setTimeout(
+        () => setCopiedId((current) => (current === id ? null : current)),
+        1600,
+      );
+    } catch {
+      setCopyError("Your browser could not copy this answer. Select the text and copy it manually.");
+    }
   }
 
   async function saveSection(id: string, title: string) {
@@ -68,23 +89,76 @@ export function ApplicationKit() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Preparing your Application Kit…</div>;
+    return (
+      <div role="status" aria-label="Preparing your Application Kit" className="space-y-5">
+        <div className="grid overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-3 sm:divide-x sm:divide-[var(--border-subtle)]">
+          {[0, 1, 2].map((item) => (
+            <div key={item} className="p-4">
+              <Skeleton className="h-7 w-12" />
+              <Skeleton className="mt-2 h-4 w-24" />
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="mt-5 h-28 w-full" />
+        </div>
+        <span className="sr-only">Preparing your Application Kit…</span>
+      </div>
+    );
   }
   if (error) {
-    return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>;
+    return (
+      <Alert
+        variant="destructive"
+        className="border-[var(--danger-border)] bg-[var(--danger-background)] text-[var(--danger)]"
+      >
+        <AlertCircle aria-hidden="true" />
+        <AlertTitle>Your Application Kit could not be loaded</AlertTitle>
+        <AlertDescription className="text-[var(--danger)]">{error}</AlertDescription>
+      </Alert>
+    );
   }
 
-  return (
-    <div className="space-y-10">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Metric label="Sections" value={sections.length} />
-        <Metric label="Saved answers" value={sections.flatMap((section) => section.items).filter((item) => item.value).length} />
-        <Metric label="Still to complete" value={sections.flatMap((section) => section.items).filter((item) => !item.value).length} />
-      </div>
+  const items = sections.flatMap((section) => section.items);
+  const savedCount = items.filter((item) => item.value).length;
+  const incompleteCount = items.length - savedCount;
 
-      {sections.map((section) => (
-        <section key={section.id}>
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+  return (
+    <div className="space-y-8">
+      <section aria-label="Application Kit summary" className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+        <div className="flex items-start gap-3 border-b border-[var(--border-subtle)] p-5 sm:p-6">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-muted)] text-[var(--primary-muted-foreground)]">
+            <Layers3 aria-hidden="true" className="size-5" />
+          </span>
+          <div>
+            <h2 className="font-semibold text-foreground">Application readiness</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Fill reusable details once, then copy the answer you need into an application form.
+            </p>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-3 sm:divide-x sm:divide-[var(--border-subtle)]">
+        <Metric label="Sections" value={sections.length} />
+        <Metric label="Saved answers" value={savedCount} />
+        <Metric label="Still to complete" value={incompleteCount} />
+        </div>
+      </section>
+
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {copiedId ? "Answer copied to clipboard." : copyError ?? ""}
+      </div>
+      {copyError ? (
+        <Alert className="border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]">
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>Copy was unavailable</AlertTitle>
+          <AlertDescription className="text-[var(--warning)]">{copyError}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {sections.length ? sections.map((section) => (
+        <section key={section.id} aria-label={section.title} className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+          <div className="flex flex-col gap-3 border-b border-[var(--border-subtle)] p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
             <div>
               {editingSection === section.id ? (
                 <SectionTitleEditor
@@ -93,27 +167,28 @@ export function ApplicationKit() {
                   onSave={(title) => saveSection(section.id, title)}
                 />
               ) : (
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-semibold text-slate-950">{section.title}</h2>
-                  <button
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 id={`section-${section.id}`} className="text-xl font-semibold tracking-[var(--tracking-tight)] text-foreground">{section.title}</h2>
+                  <Button
                     type="button"
-                    className="rounded-md px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                    variant="ghost"
                     onClick={() => setEditingSection(section.id)}
                   >
+                    <Pencil aria-hidden="true" data-icon="inline-start" />
                     Edit heading
-                  </button>
+                  </Button>
                 </div>
               )}
               {section.description ? (
-                <p className="mt-1 text-sm text-slate-600">{section.description}</p>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{section.description}</p>
               ) : null}
             </div>
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-600">
+            <Badge variant="secondary" className="capitalize">
               {section.sectionType}
-            </span>
+            </Badge>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-2">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {section.items.map((item) => (
               editingItem === item.id ? (
                 <ItemEditor
@@ -124,34 +199,38 @@ export function ApplicationKit() {
                   onSave={(label, value) => saveItem(item.id, label, value)}
                 />
               ) : (
-                <article key={item.id} className="flex min-h-32 flex-col rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <h3 className="font-medium text-slate-900">{item.label}</h3>
+                <article key={item.id} className="grid gap-4 p-5 transition-colors hover:bg-[var(--surface-raised)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-foreground">{item.label}</h3>
                     {item.sourceKind !== "manual" ? (
-                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] capitalize text-slate-500">
+                      <Badge variant="outline" className="capitalize text-muted-foreground">
                         {item.sourceKind}
-                      </span>
+                      </Badge>
                     ) : null}
+                    </div>
+                    <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${item.value ? "text-muted-foreground" : "italic text-[var(--text-tertiary)]"}`}>
+                      {item.value || "Not added yet"}
+                    </p>
                   </div>
-                  <p className={`mt-2 flex-1 whitespace-pre-wrap text-sm leading-6 ${item.value ? "text-slate-700" : "italic text-slate-400"}`}>
-                    {item.value || "Not added yet"}
-                  </p>
-                  <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                    <button
+                  <div className="grid gap-2 sm:flex sm:items-center sm:justify-end">
+                    <Button
                       type="button"
-                      className="rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                      variant="outline"
                       onClick={() => setEditingItem(item.id)}
                     >
+                      <Pencil aria-hidden="true" data-icon="inline-start" />
                       {item.value ? "Edit" : "Add answer"}
-                    </button>
+                    </Button>
                     {item.value ? (
-                      <button
+                      <Button
                         type="button"
-                        className="rounded-md bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100"
+                        variant={copiedId === item.id ? "secondary" : "default"}
                         onClick={() => void copy(item.id, item.value)}
                       >
+                        {copiedId === item.id ? <Check aria-hidden="true" data-icon="inline-start" /> : <CopyIcon aria-hidden="true" data-icon="inline-start" />}
                         {copiedId === item.id ? "Copied" : "Copy"}
-                      </button>
+                      </Button>
                     ) : null}
                   </div>
                 </article>
@@ -159,16 +238,29 @@ export function ApplicationKit() {
             ))}
           </div>
         </section>
-      ))}
+      )) : (
+        <div className="rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-raised)] px-5 py-10 text-center">
+          <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary-muted-foreground)]">
+            <Inbox aria-hidden="true" className="size-5" />
+          </span>
+          <h2 className="mt-4 font-semibold text-foreground">Your Application Kit is empty</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+            No reusable sections are available yet. Refresh the page to retry preparing your starter kit.
+          </p>
+          <Button type="button" variant="outline" className="mt-5" onClick={() => window.location.reload()}>
+            Try again
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-2xl font-semibold text-slate-950">{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{label}</p>
+    <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-b-0 sm:p-5">
+      <p className="font-mono text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -184,18 +276,30 @@ function SectionTitleEditor({
 }) {
   const [value, setValue] = useState(title);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   return (
     <form
-      className="flex flex-wrap gap-2"
+      className="space-y-3"
       onSubmit={(event) => {
         event.preventDefault();
         setBusy(true);
-        void onSave(value).finally(() => setBusy(false));
+        setError(null);
+        void onSave(value)
+          .catch((cause) =>
+            setError(cause instanceof Error ? cause.message : "Could not save the heading."),
+          )
+          .finally(() => setBusy(false));
       }}
     >
-      <input className="rounded-lg border border-slate-300 px-3 py-2 text-sm" value={value} onChange={(event) => setValue(event.target.value)} required maxLength={100} />
-      <button className={buttonStyles.primary} disabled={busy}>Save</button>
-      <button className={buttonStyles.secondary} type="button" onClick={onCancel}>Cancel</button>
+      <label className="block text-sm font-semibold text-foreground">
+        Section heading
+        <input className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2 text-sm text-foreground shadow-xs outline-none" value={value} onChange={(event) => setValue(event.target.value)} required maxLength={100} />
+      </label>
+      {error ? <p role="alert" className="text-sm text-[var(--danger)]">{error}</p> : null}
+      <div className="grid gap-2 sm:flex">
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save heading"}</Button>
+        <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+      </div>
     </form>
   );
 }
@@ -217,7 +321,7 @@ function ItemEditor({
   const [error, setError] = useState<string | null>(null);
   return (
     <form
-      className="rounded-xl border border-indigo-200 bg-white p-4 lg:col-span-2"
+      className="bg-[var(--ai-muted)] p-5 sm:p-6"
       onSubmit={(event) => {
         event.preventDefault();
         setBusy(true);
@@ -227,20 +331,23 @@ function ItemEditor({
           .finally(() => setBusy(false));
       }}
     >
-      <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+      <div className="flex items-center gap-2 text-[var(--ai-muted-foreground)]">
+        <Sparkles aria-hidden="true" className="size-4" />
+        <p className="text-xs font-semibold uppercase tracking-[var(--tracking-label)]">Edit reusable answer</p>
+      </div>
+      <label className="mt-4 block text-sm font-semibold text-foreground">
         Question or field
-        <input className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm normal-case tracking-normal text-slate-900" value={nextLabel} onChange={(event) => setNextLabel(event.target.value)} required />
+        <input className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2 text-sm font-normal text-foreground shadow-xs outline-none" value={nextLabel} onChange={(event) => setNextLabel(event.target.value)} required />
       </label>
-      <label className="mt-4 block text-xs font-medium uppercase tracking-wide text-slate-500">
+      <label className="mt-4 block text-sm font-semibold text-foreground">
         Copy-ready answer
-        <textarea className="mt-2 block w-full rounded-lg border border-slate-300 p-3 text-sm leading-6 normal-case tracking-normal text-slate-900" rows={5} value={nextValue} onChange={(event) => setNextValue(event.target.value)} />
+        <textarea className="mt-2 block min-h-32 w-full resize-y rounded-lg border border-input bg-[var(--surface-overlay)] p-3 text-base font-normal leading-7 text-foreground shadow-xs outline-none" rows={5} value={nextValue} onChange={(event) => setNextValue(event.target.value)} />
       </label>
-      {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
-      <div className="mt-4 flex justify-end gap-2">
-        <button className={buttonStyles.secondary} type="button" onClick={onCancel}>Cancel</button>
-        <button className={buttonStyles.primary} disabled={busy}>{busy ? "Saving…" : "Save changes"}</button>
+      {error ? <p role="alert" className="mt-3 text-sm text-[var(--danger)]">{error}</p> : null}
+      <div className="mt-4 grid gap-2 sm:flex sm:justify-end">
+        <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" disabled={busy}>{busy ? "Saving…" : "Save changes"}</Button>
       </div>
     </form>
   );
 }
-
