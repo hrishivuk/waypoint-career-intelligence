@@ -18,6 +18,7 @@ import type { CvSnapshot } from "@/domain/cv/cv-document";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function formatBytes(bytes: number) {
@@ -32,6 +33,7 @@ export function CvWorkspace() {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<CvSnapshot | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -72,7 +74,6 @@ export function CvWorkspace() {
   }
 
   async function remove(cv: CvSnapshot) {
-    if (!window.confirm(`Delete “${cv.displayName}” and its stored file?`)) return;
     setWorking(true);
     try {
       const response = await fetch(`/api/v1/cvs/${cv.id}`, { method: "DELETE" });
@@ -81,6 +82,7 @@ export function CvWorkspace() {
         throw new Error(body.error);
       }
       setCvs((current) => current.filter((item) => item.id !== cv.id));
+      setPendingDelete(null);
       if (openId === cv.id) setOpenId(null);
       setError(null);
     } catch (cause) {
@@ -264,7 +266,7 @@ export function CvWorkspace() {
                         <Button
                           variant="destructive"
                           disabled={working}
-                          onClick={() => void remove(cv)}
+                          onClick={() => setPendingDelete(cv)}
                           type="button"
                         >
                           <Trash2 aria-hidden="true" data-icon="inline-start" />
@@ -311,6 +313,23 @@ export function CvWorkspace() {
           </div>
         )}
       </section>
+      <ConfirmationDialog
+        open={pendingDelete !== null}
+        title="Delete this CV?"
+        description={
+          pendingDelete
+            ? `“${pendingDelete.displayName}” and its stored source file will be permanently removed from your account.`
+            : "This CV and its stored source file will be permanently removed."
+        }
+        confirmLabel="Delete CV"
+        busy={working}
+        onOpenChange={(open) => {
+          if (!open && !working) setPendingDelete(null);
+        }}
+        onConfirm={() => {
+          if (pendingDelete) void remove(pendingDelete);
+        }}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Provider = "openai" | "groq";
@@ -30,6 +31,7 @@ export function AiProviderSettings({ onSaved }: { onSaved?: (provider: Provider)
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<Provider | null>(null);
 
   async function load() {
     try {
@@ -74,13 +76,12 @@ export function AiProviderSettings({ onSaved }: { onSaved?: (provider: Provider)
   }
 
   async function remove(target: Provider) {
-    if (!window.confirm(`Remove your saved ${providerDetails[target].name} key? AI features using it will stop working.`)) return;
     setBusy(true); setError(null); setMessage(null);
     try {
       const response = await fetch("/api/v1/settings/ai-credentials", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ provider: target }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error);
-      setMessage(`${providerDetails[target].name} key removed.`); await load();
+      setMessage(`${providerDetails[target].name} key removed.`); setPendingRemoval(null); await load();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to remove this key."); }
     finally { setBusy(false); }
   }
@@ -204,7 +205,7 @@ export function AiProviderSettings({ onSaved }: { onSaved?: (provider: Provider)
               type="button"
               variant="outline"
               disabled={busy}
-              onClick={() => void remove(provider)}
+              onClick={() => setPendingRemoval(provider)}
             >
               <Trash2 aria-hidden="true" data-icon="inline-start" />
               Remove saved key
@@ -239,6 +240,23 @@ export function AiProviderSettings({ onSaved }: { onSaved?: (provider: Provider)
         </a>
         .
       </p>
+      <ConfirmationDialog
+        open={pendingRemoval !== null}
+        title="Remove this provider key?"
+        description={
+          pendingRemoval
+            ? `Your saved ${providerDetails[pendingRemoval].name} key will be permanently removed. AI features using it will stop until you connect another key.`
+            : "The saved provider key will be permanently removed."
+        }
+        confirmLabel="Remove key"
+        busy={busy}
+        onOpenChange={(open) => {
+          if (!open && !busy) setPendingRemoval(null);
+        }}
+        onConfirm={() => {
+          if (pendingRemoval) void remove(pendingRemoval);
+        }}
+      />
     </div>
   );
 }

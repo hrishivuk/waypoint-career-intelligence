@@ -24,6 +24,24 @@ test("Google account entry is available from sign-in and signup", async ({ page 
   }
 });
 
+test("authenticated workspace routes reject anonymous browsers", async ({ page }) => {
+  for (const route of [
+    "/onboarding",
+    "/knowledge",
+    "/cvs",
+    "/jobs",
+    "/application-kit",
+    "/settings",
+  ]) {
+    await page.goto(route);
+    await expect(page).toHaveURL(/\/login\?next=/);
+    const redirected = new URL(page.url());
+    expect(redirected.pathname).toBe("/login");
+    expect(redirected.searchParams.get("next")).toBe(route);
+    await expect(page.getByRole("heading", { name: "Sign in to Waypoint" })).toBeVisible();
+  }
+});
+
 test("health endpoint exposes status but no secret values", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.ok()).toBeTruthy();

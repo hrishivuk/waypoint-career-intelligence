@@ -2,6 +2,10 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 import {
   categoryLabel,
   categoryOptions,
@@ -188,12 +192,12 @@ export function ProfileOnboarding() {
     <div className="space-y-10">
       <section
         aria-labelledby="add-fact-title"
-        className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7"
+        className="rounded-xl border border-border bg-card p-5 shadow-xs sm:p-7"
       >
-        <h2 id="add-fact-title" className="text-lg font-semibold text-slate-950">
+        <h2 id="add-fact-title" className="text-lg font-semibold text-foreground">
           Add something the coach should know
         </h2>
-        <p className="mt-1 text-sm leading-6 text-slate-600">
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Add one clear fact at a time. You can review or change it below.
         </p>
 
@@ -201,7 +205,7 @@ export function ProfileOnboarding() {
           <div>
             <label
               htmlFor="fact-category"
-              className="block text-sm font-medium text-slate-800"
+              className="block text-sm font-medium text-foreground"
             >
               Area
             </label>
@@ -211,7 +215,7 @@ export function ProfileOnboarding() {
               onChange={(event) =>
                 setCategory(event.target.value as ProfileFactCategory)
               }
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-950 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="mt-2 min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2.5 text-sm text-foreground shadow-xs outline-none transition-colors hover:border-[var(--border-strong)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
             >
               {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -219,7 +223,7 @@ export function ProfileOnboarding() {
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               {categoryOptions.find((option) => option.value === category)?.prompt}
             </p>
           </div>
@@ -227,7 +231,7 @@ export function ProfileOnboarding() {
           <div>
             <label
               htmlFor="fact-statement"
-              className="block text-sm font-medium text-slate-800"
+              className="block text-sm font-medium text-foreground"
             >
               What should it remember?
             </label>
@@ -239,17 +243,16 @@ export function ProfileOnboarding() {
               rows={3}
               maxLength={2000}
               placeholder="For example: I prefer product-focused roles where I can work closely with users."
-              className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm leading-6 text-slate-950 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="mt-2 min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2.5 text-sm leading-6 text-foreground shadow-xs outline-none transition-colors placeholder:text-[var(--text-tertiary)] hover:border-[var(--border-strong)] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
             />
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={requestState !== "idle" || !statement.trim()}
-            className="rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             {requestState === "saving" ? "Saving…" : "Add to profile"}
-          </button>
+          </Button>
         </form>
       </section>
 
@@ -258,46 +261,44 @@ export function ProfileOnboarding() {
           <div>
             <h2
               id="profile-facts-title"
-              className="text-lg font-semibold text-slate-950"
+              className="text-lg font-semibold text-foreground"
             >
               Your profile facts
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-muted-foreground">
               Confirmed facts can be used as trusted evidence.
             </p>
           </div>
-          <p className="text-sm text-slate-500">{facts.length} total</p>
+          <p className="text-sm text-muted-foreground">{facts.length} total</p>
         </div>
 
         <div aria-live="polite" className="mt-5">
           {error ? (
-            <div
-              role="alert"
-              className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-            >
-              <p>{error}</p>
-              <button
+            <Alert variant="destructive" className="p-4">
+              <AlertDescription>{error}</AlertDescription>
+              <Button
                 type="button"
                 onClick={() => void loadFacts()}
-                className="mt-2 font-medium underline underline-offset-2"
+                variant="link"
+                className="mt-2 justify-start px-0 text-destructive"
               >
                 Try loading again
-              </button>
-            </div>
+              </Button>
+            </Alert>
           ) : null}
 
           {requestState === "loading" ? (
-            <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+            <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-xs">
               Loading your career profile…
             </p>
           ) : null}
 
           {requestState !== "loading" && facts.length === 0 && !error ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-              <h3 className="font-medium text-slate-900">
+            <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
+              <h3 className="font-medium text-foreground">
                 Your profile is empty
               </h3>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Add your first goal, preference, skill, or experience above.
               </p>
             </div>
@@ -307,14 +308,14 @@ export function ProfileOnboarding() {
         <div className="mt-6 space-y-8">
           {groupedFacts.map((group) => (
             <section key={group.value} aria-labelledby={`group-${group.value}`}>
-              <div className="border-b border-slate-200 pb-2">
+              <div className="border-b border-border pb-2">
                 <h3
                   id={`group-${group.value}`}
-                  className="font-semibold text-slate-900"
+                  className="font-semibold text-foreground"
                 >
                   {group.label}
                 </h3>
-                <p className="mt-0.5 text-xs text-slate-500">{group.prompt}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{group.prompt}</p>
               </div>
               <ul className="mt-3 space-y-3">
                 {group.facts.map((fact) => (
@@ -351,11 +352,11 @@ function ProfileFactCard({
   const [draft, setDraft] = useState(fact.statement);
 
   const statusStyles: Record<FactConfirmation, string> = {
-    proposed: "border-amber-200 bg-amber-50 text-amber-800",
-    confirmed: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    rejected: "border-slate-200 bg-slate-100 text-slate-600",
-    superseded: "border-slate-200 bg-slate-100 text-slate-600",
-    stale: "border-orange-200 bg-orange-50 text-orange-800",
+    proposed: "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]",
+    confirmed: "border-[var(--success-border)] bg-[var(--success-background)] text-[var(--success)]",
+    rejected: "border-border bg-muted text-muted-foreground",
+    superseded: "border-border bg-muted text-muted-foreground",
+    stale: "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]",
   };
 
   async function saveEdit(event: FormEvent<HTMLFormElement>) {
@@ -371,11 +372,11 @@ function ProfileFactCard({
   }
 
   return (
-    <article
-      className={`rounded-xl border bg-white p-4 ${
+    <Card
+      className={`gap-0 border bg-card p-4 py-4 shadow-xs ${
         fact.confirmation === "rejected"
-          ? "border-slate-200 opacity-70"
-          : "border-slate-200"
+          ? "border-border opacity-70"
+          : "border-border"
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -401,70 +402,70 @@ function ProfileFactCard({
             required
             rows={3}
             maxLength={2000}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm leading-6 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2.5 text-sm leading-6 text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
           />
           <div className="mt-2 flex gap-2">
-            <button
+            <Button
               type="submit"
               disabled={disabled || !draft.trim()}
-              className="rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
             >
               Save
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => {
                 setDraft(fact.statement);
                 setEditing(false);
               }}
-              className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700"
+              variant="outline"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       ) : (
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">
           {fact.statement}
         </p>
       )}
 
       {!editing ? (
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
           {fact.confirmation === "proposed" ? (
-            <button
+            <Button
               type="button"
               disabled={disabled}
               onClick={() =>
                 void onUpdate(fact, { confirmation: "confirmed" })
               }
-              className="rounded-md border border-emerald-300 px-3 py-2 text-xs font-medium text-emerald-800 disabled:opacity-50"
+              variant="outline"
+              className="border-[var(--success-border)] text-[var(--success)]"
             >
               Confirm
-            </button>
+            </Button>
           ) : null}
           {fact.confirmation === "proposed" ? (
-            <button
+            <Button
               type="button"
               disabled={disabled}
               onClick={() =>
                 void onUpdate(fact, { confirmation: "rejected" })
               }
-              className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 disabled:opacity-50"
+              variant="outline"
             >
               Reject
-            </button>
+            </Button>
           ) : null}
-          <button
+          <Button
             type="button"
             disabled={disabled}
             onClick={() => setEditing(true)}
-            className="rounded-md px-3 py-2 text-xs font-medium text-slate-700 underline-offset-2 hover:underline disabled:opacity-50"
+            variant="ghost"
           >
             Edit
-          </button>
+          </Button>
         </div>
       ) : null}
-    </article>
+    </Card>
   );
 }

@@ -2,6 +2,10 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 type Confidence = "low" | "medium" | "high";
 type Criticality = "normal" | "important" | "critical";
 type ReviewStatus =
@@ -102,14 +106,14 @@ function projectionBadge(status: string): string {
   switch (status) {
     case "projected":
     case "complete":
-      return "border-emerald-200 bg-emerald-50 text-emerald-800";
+      return "border-[var(--success-border)] bg-[var(--success-background)] text-[var(--success)]";
     case "blocked":
     case "failed":
-      return "border-red-200 bg-red-50 text-red-800";
+      return "border-[var(--danger-border)] bg-[var(--danger-background)] text-[var(--danger)]";
     case "pending":
-      return "border-amber-200 bg-amber-50 text-amber-800";
+      return "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]";
     default:
-      return "border-slate-200 bg-slate-50 text-slate-600";
+      return "border-border bg-muted text-muted-foreground";
   }
 }
 
@@ -315,52 +319,50 @@ export function KnowledgeReview() {
     <section aria-labelledby="review-heading">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 id="review-heading" className="text-xl font-semibold text-slate-950">
+          <h2 id="review-heading" className="text-xl font-semibold text-foreground">
             Staged candidates
           </h2>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {proposedCount} awaiting review · {candidates.length} total
           </p>
         </div>
-        <button
+        <Button
           type="button"
           onClick={() => void loadCandidates()}
           disabled={requestState === "loading" || pendingId !== null}
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          variant="outline"
         >
           Refresh
-        </button>
+        </Button>
       </div>
 
       <div aria-live="polite">
         {error ? (
-          <div
-            role="alert"
-            className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-          >
-            <p>{error}</p>
-            <button
+          <Alert variant="destructive" className="mb-5 p-4">
+            <AlertDescription>{error}</AlertDescription>
+            <Button
               type="button"
               onClick={() => void loadCandidates()}
-              className="mt-2 font-medium underline underline-offset-2"
+              variant="link"
+              className="mt-2 justify-start px-0 text-destructive"
             >
               Try loading again
-            </button>
-          </div>
+            </Button>
+          </Alert>
         ) : null}
 
         {requestState === "loading" ? (
-          <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
+          <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground shadow-xs">
             Loading imported knowledge…
           </p>
         ) : null}
 
         {requestState === "idle" && candidates.length === 0 && !error ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
-            <h3 className="font-medium text-slate-900">
+          <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
+            <h3 className="font-medium text-foreground">
               Nothing is waiting for review
             </h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-muted-foreground">
               Staged handover records will appear here before they can become
               trusted knowledge.
             </p>
@@ -372,14 +374,14 @@ export function KnowledgeReview() {
         <div className="space-y-9">
           {groups.map(([group, items]) => (
             <section key={group} aria-labelledby={`group-${group}`}>
-              <div className="border-b border-slate-200 pb-2">
+              <div className="border-b border-border pb-2">
                 <h3
                   id={`group-${group}`}
-                  className="font-semibold text-slate-900"
+                  className="font-semibold text-foreground"
                 >
                   {readableLabel(group)}
                 </h3>
-                <p className="mt-0.5 text-xs text-slate-500">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {items.length} {items.length === 1 ? "record" : "records"}
                 </p>
               </div>
@@ -425,19 +427,19 @@ function CandidateCard({
   const [correctionError, setCorrectionError] = useState<string | null>(null);
 
   const statusStyles: Record<ReviewStatus, string> = {
-    proposed: "border-amber-200 bg-amber-50 text-amber-800",
-    pending: "border-amber-200 bg-amber-50 text-amber-800",
-    confirmed: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    rejected: "border-slate-200 bg-slate-100 text-slate-600",
-    corrected: "border-indigo-200 bg-indigo-50 text-indigo-800",
-    superseded: "border-slate-200 bg-slate-100 text-slate-600",
-    stale: "border-orange-200 bg-orange-50 text-orange-800",
+    proposed: "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]",
+    pending: "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]",
+    confirmed: "border-[var(--success-border)] bg-[var(--success-background)] text-[var(--success)]",
+    rejected: "border-border bg-muted text-muted-foreground",
+    corrected: "border-[var(--info-border)] bg-[var(--info-background)] text-[var(--info)]",
+    superseded: "border-border bg-muted text-muted-foreground",
+    stale: "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]",
   };
 
   const criticalityStyles: Record<Criticality, string> = {
-    normal: "text-slate-600",
-    important: "text-amber-700",
-    critical: "font-medium text-red-700",
+    normal: "text-muted-foreground",
+    important: "text-[var(--warning)]",
+    critical: "font-medium text-destructive",
   };
   const metadata = recordMetadata(candidate);
   const projectionStatus =
@@ -492,7 +494,7 @@ function CandidateCard({
     candidate.reviewStatus === "pending";
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4">
+    <Card className="gap-0 border border-border bg-card p-4 py-4 shadow-xs">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <span
@@ -500,7 +502,7 @@ function CandidateCard({
           >
             {readableLabel(candidate.reviewStatus)}
           </span>
-          <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600">
+          <span className="rounded-full border border-border bg-muted px-2.5 py-1 text-xs text-muted-foreground">
             {readableLabel(candidate.recordType)}
           </span>
           {projectionStatus ? (
@@ -512,7 +514,7 @@ function CandidateCard({
             </span>
           ) : null}
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-muted-foreground">
           {candidate.stableRecordId}
         </span>
       </div>
@@ -521,7 +523,7 @@ function CandidateCard({
         <form onSubmit={submitCorrection} className="mt-4">
           <label
             htmlFor={`correct-${candidate.id}`}
-            className="text-sm font-medium text-slate-800"
+            className="text-sm font-medium text-foreground"
           >
             Correct the structured record
           </label>
@@ -533,22 +535,21 @@ function CandidateCard({
             rows={4}
             maxLength={4000}
             spellCheck={false}
-            className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm leading-6 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="mt-2 min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2.5 font-mono text-sm leading-6 text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
           />
           {correctionError ? (
-            <p role="alert" className="mt-2 text-xs text-red-700">
+            <p role="alert" className="mt-2 text-xs text-destructive">
               {correctionError}
             </p>
           ) : null}
           <div className="mt-2 flex gap-2">
-            <button
+            <Button
               type="submit"
               disabled={disabled || !draft.trim()}
-              className="rounded-md bg-slate-900 px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
             >
               Save correction
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => {
                 setDraft(
@@ -562,27 +563,27 @@ function CandidateCard({
                 setEditing(false);
               }}
               disabled={disabled}
-              className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 disabled:opacity-50"
+              variant="outline"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       ) : (
-        <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-800">
+        <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-foreground">
           {recordSummary(candidate)}
         </p>
       )}
 
-      <dl className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-xs sm:grid-cols-3">
+      <dl className="mt-4 grid gap-3 border-t border-border pt-4 text-xs sm:grid-cols-3">
         <div>
-          <dt className="font-medium text-slate-500">Confidence</dt>
-          <dd className="mt-1 text-slate-800">
+          <dt className="font-medium text-muted-foreground">Confidence</dt>
+          <dd className="mt-1 text-foreground">
             {readableLabel(metadata.confidence)}
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-slate-500">Criticality</dt>
+          <dt className="font-medium text-muted-foreground">Criticality</dt>
           <dd
             className={`mt-1 ${criticalityStyles[metadata.criticality]}`}
           >
@@ -590,50 +591,51 @@ function CandidateCard({
           </dd>
         </div>
         <div>
-          <dt className="font-medium text-slate-500">Provenance</dt>
-          <dd className="mt-1 text-slate-800">
+          <dt className="font-medium text-muted-foreground">Provenance</dt>
+          <dd className="mt-1 text-foreground">
             {readableLabel(metadata.provenance.basis)} ·{" "}
             {readableLabel(metadata.provenance.sourceType)}
           </dd>
         </div>
       </dl>
-      <p className="mt-3 text-xs leading-5 text-slate-500">
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
         Source: {metadata.provenance.sourceRef}
       </p>
       {candidate.projection?.message ? (
-        <p className="mt-2 text-xs leading-5 text-slate-600">
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
           Storage result: {candidate.projection.message}
         </p>
       ) : null}
 
       {reviewable && !editing ? (
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-          <button
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+          <Button
             type="button"
             onClick={() => void onReview(candidate, "confirm")}
             disabled={disabled}
-            className="rounded-md bg-emerald-700 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-800 disabled:opacity-50"
+            className="bg-[var(--success-solid)] text-[var(--success-solid-foreground)] hover:bg-[color-mix(in_oklch,var(--success-solid),black_10%)]"
           >
             {pending ? "Saving…" : "Confirm"}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => void onReview(candidate, "reject")}
             disabled={disabled}
-            className="rounded-md border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            variant="outline"
           >
             Reject
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => setEditing(true)}
             disabled={disabled}
-            className="rounded-md border border-indigo-200 px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+            variant="outline"
+            className="border-[var(--info-border)] text-[var(--info)] hover:bg-[var(--info-background)]"
           >
             Correct
-          </button>
+          </Button>
         </div>
       ) : null}
-    </article>
+    </Card>
   );
 }
