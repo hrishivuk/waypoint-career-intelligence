@@ -109,9 +109,9 @@ supabase start
 supabase db reset
 ```
 
-The repository intentionally does not commit a project-specific
-`supabase/config.toml`. Run `supabase init` once before `supabase start` in a
-fresh clone, or link the clone directly to a disposable hosted test project.
+The repository includes a secret-free local `supabase/config.toml`. Link a
+clone to its intended hosted project with `supabase link --project-ref ...`;
+the generated `.temp` linkage remains uncommitted.
 
 For a hosted Supabase project, link and push instead. See the
 [public deployment guide](docs/deployment/public-deployment.md) for Auth,

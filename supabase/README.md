@@ -76,7 +76,6 @@ The first path segment is used by Storage RLS.
 With the Supabase CLI installed and Docker running:
 
 ```sh
-supabase init # once per fresh clone; config.toml is environment-specific
 supabase start
 supabase db reset
 ```
