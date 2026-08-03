@@ -108,6 +108,10 @@ supabase start
 supabase db reset
 ```
 
+The repository intentionally does not commit a project-specific
+`supabase/config.toml`. Run `supabase init` once before `supabase start` in a
+fresh clone, or link the clone directly to a disposable hosted test project.
+
 For a hosted Supabase project, link and push instead. See the
 [public deployment guide](docs/deployment/public-deployment.md) for Auth,
 Google OAuth, redirect URLs, migrations, encryption-key rotation, and release
@@ -171,14 +175,15 @@ Run the full repository quality gate:
 npm run typecheck
 npm run lint
 npm test
+npm run test:integration # disposable migrated Supabase project required
+npm run test:e2e
 npm run build
 ```
 
-The production build can currently print non-fatal PDF.js server-runtime
-warnings about missing `DOMMatrix`, `ImageData`, or `Path2D` polyfills. The build
-still completes, but PDF and DOCX upload/extraction must be smoke-tested in the
-actual deployment runtime before release. Do not describe a deployment as
-warning-free until this is resolved.
+The production build does not initialize PDF.js. It is lazy-loaded only for an
+actual PDF upload, and the unit suite exercises that real parser path. Run on
+Node.js 22 or newer so PDF.js can load its native canvas compatibility layer;
+PDF and DOCX extraction must still be smoke-tested in the deployment runtime.
 
 ## Deployment and project documentation
 

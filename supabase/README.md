@@ -71,6 +71,7 @@ The first path segment is used by Storage RLS.
 With the Supabase CLI installed and Docker running:
 
 ```sh
+supabase init # once per fresh clone; config.toml is environment-specific
 supabase start
 supabase db reset
 ```
@@ -84,6 +85,21 @@ To inspect pending migration changes without applying them remotely:
 supabase migration list
 supabase db lint
 ```
+
+### Destructive two-user isolation test
+
+After migrating a disposable local or hosted test project, set the four
+`SUPABASE_TEST_*` variables described in `.env.example`, including the explicit
+mutation opt-in, and run `npm run test:integration`. The suite creates two
+confirmed Auth users and verifies owner/foreign select, insert, update, delete,
+cross-tenant relationship, Storage upload, and signed-URL behavior through
+their real sessions. It deletes both Auth users in cleanup. Never point this
+suite at production.
+
+The GitHub integration job is enabled only when the repository/environment
+variable `RUN_SUPABASE_INTEGRATION` is set to `true` and the three test-project
+secrets are configured. This keeps pull requests from forks safe while making
+the destructive gate explicit for release branches.
 
 ## Remote environments
 

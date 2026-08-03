@@ -1,5 +1,9 @@
 # Waypoint — UI/UX and Product Design Case Study
 
+> Historical case study: this document describes the earlier private/demo
+> milestone and is not the current public-product source of truth. Use
+> `docs/LINKEDIN_PROJECT_ANALYSIS.md` for current claims before publishing.
+
 ## Portfolio card
 
 **Category:** UX / Product Design / 2026  
@@ -303,4 +307,3 @@ Use real screenshots with all private information removed:
 ## Short interview explanation
 
 “Waypoint started from a problem I experienced personally: ChatGPT understood my career context, but that understanding was hidden inside conversations and was difficult to inspect or reuse reliably. I designed a structured career workspace where personal knowledge is confirmed, job analysis is evidence-based, and CVs are treated as job-specific presentations rather than the source of truth. The most important design decisions were separating those layers, treating missing evidence as unknown instead of failure, and creating a completely isolated fictional demo so the private product could be shown safely.”
-

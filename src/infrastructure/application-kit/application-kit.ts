@@ -75,7 +75,6 @@ async function seedApplicationKit(client: SupabaseClient, userId: string) {
   const industries = statement("Industry interests");
   const workMode = statement("Location and work mode preferences");
   const currentRole = statement("Current professional role");
-  const direction = statement("Product‑focused career direction");
   const currentLocation =
     eligibility.match(/based in ([^;]+?)(?:;|$)/i)?.[1]?.trim() ?? "";
   const visaStatus =
@@ -120,10 +119,7 @@ async function seedApplicationKit(client: SupabaseClient, userId: string) {
         ["Figma profile", "", "manual"],
         ["Medium", "", "manual"],
         ["Personal website", "", "manual"],
-        ["Frontend CV", String((cvs?.[0] as Row | undefined)?.display_name ?? ""), cvs?.length ? "cv" : "manual"],
-        ["Product Design CV", "", "manual"],
-        ["UX CV", "", "manual"],
-        ["General CV", "", "manual"],
+        ["Latest CV", String((cvs?.[0] as Row | undefined)?.display_name ?? ""), cvs?.length ? "cv" : "manual"],
       ],
     },
     {
@@ -132,27 +128,27 @@ async function seedApplicationKit(client: SupabaseClient, userId: string) {
       description: "Current preferences that can be updated whenever your search changes.",
       items: [
         ["Desired roles", desiredRoles, desiredRoles ? "profile" : "manual"],
-        ["Alternative roles", "Frontend Engineer, Product Engineer, UX Engineer, Product Designer, UX Designer", desiredRoles ? "profile" : "manual"],
+        ["Alternative roles", "", "manual"],
         ["Preferred industries", industries, industries ? "profile" : "manual"],
-        ["Preferred company size", "Open to different company sizes; the quality of work, learning and ownership matter more.", "profile"],
+        ["Preferred company size", "", "manual"],
         ["Work arrangement", workMode, workMode ? "profile" : "manual"],
         ["Preferred locations", preferredLocations, preferredLocations ? "profile" : "manual"],
         ["Salary expectation", "", "manual"],
-        ["Employment type", "Full-time", "profile"],
+        ["Employment type", "", "manual"],
         ["Earliest joining date", "", "manual"],
       ],
     },
     {
       sectionType: "reusable",
       title: "Reusable answers",
-      description: "Natural first-person answers grounded in your confirmed Master Profile.",
+      description: "Write and save truthful answers you can adapt for future applications.",
       items: [
-        ["Tell us about yourself", `I am a frontend engineer who naturally grew into product design. I enjoy understanding real user problems and building products that are useful, intuitive and maintainable. My experience combines frontend engineering, UX thinking and close collaboration with design and product teams.${direction ? " My long-term direction is to keep growing across engineering, UX and product thinking while contributing to meaningful products." : ""}`, "profile"],
-        ["Why should we hire you?", "I bring a useful combination of frontend engineering, user-centred thinking and product awareness. I can take ownership of features, collaborate effectively with designers, developers and product teams, and make decisions by considering both the user experience and long-term maintainability. I am also curious, open to feedback and comfortable learning what I do not know.", "profile"],
-        ["What are your main strengths?", "My main strengths are frontend engineering, product thinking, collaboration and curiosity. I like to understand the problem properly before choosing a solution, and I try to keep my work simple, maintainable and useful for the people using it. I also communicate openly, ask questions and take feedback positively.", "profile"],
-        ["How do you work in a team?", "I work well both independently and as part of a cross-functional team. I enjoy discussing ideas, asking questions and understanding the reasoning behind decisions. I am comfortable taking ownership of my work while collaborating closely with designers, developers, product teams and other stakeholders.", "profile"],
-        ["What are your career goals?", direction || "I want to continue growing across frontend engineering, UX and product thinking, and work on products from an early stage where I can contribute to both the direction and implementation.", "profile"],
-        ["What kind of company are you looking for?", "I am looking for a product-focused team where I can keep learning, take ownership and work with people who care about user experience and good engineering practices. Company size is less important to me than meaningful work, mentorship, collaboration and long-term growth.", "profile"],
+        ["Tell us about yourself", "", "manual"],
+        ["Why should we hire you?", "", "manual"],
+        ["What are your main strengths?", "", "manual"],
+        ["How do you work in a team?", "", "manual"],
+        ["What are your career goals?", "", "manual"],
+        ["What kind of company are you looking for?", "", "manual"],
         ["Are you legally authorised to work?", eligibility, eligibility ? "profile" : "manual"],
         ["What is your preferred work arrangement?", workMode, workMode ? "profile" : "manual"],
         ["How did you hear about us?", "", "manual"],

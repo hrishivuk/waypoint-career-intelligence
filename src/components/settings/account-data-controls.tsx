@@ -37,7 +37,7 @@ export function AccountDataControls() {
     </section>
     <section className="rounded-xl border border-red-200 bg-red-50 p-5">
       <h2 className="font-semibold text-red-950">Delete account permanently</h2>
-      <p className="mt-2 text-sm leading-6 text-red-800">This removes your uploaded files, encrypted provider credentials, career knowledge, analyses, application content, and sign-in identity. It cannot be undone.</p>
+      <p className="mt-2 text-sm leading-6 text-red-800">This removes your uploaded files, encrypted provider credentials, career knowledge, analyses, application content, and sign-in identity. It cannot be undone. If your session is older than 15 minutes, sign out and sign in again first.</p>
       <label className="mt-4 block text-sm font-medium text-red-950">Type DELETE MY ACCOUNT to confirm
         <input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="off" className="mt-2 block min-h-11 w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm" />
       </label>
@@ -46,4 +46,3 @@ export function AccountDataControls() {
     </section>
   </div>;
 }
-

@@ -1,5 +1,9 @@
 # Waypoint — AI-Assisted Development Case Study
 
+> Historical case study: this document describes the earlier private/demo
+> milestone and is not the current public-product source of truth. Use
+> `docs/LINKEDIN_PROJECT_ANALYSIS.md` for current claims before publishing.
+
 ## Portfolio card
 
 **Category:** AI Engineering / Full-Stack Development / 2026  
@@ -390,4 +394,3 @@ The strongest outcome is not simply that AI was integrated. It is that AI was pl
 ## Short interview explanation
 
 “I used AI extensively while developing Waypoint, but I did not allow AI to define truth inside the product. Early versions exposed the usual weaknesses: malformed JSON, invented quotes, literal matching, and token limits. I responded by redesigning the system around deterministic source blocks, canonical knowledge, bounded AI capabilities, evidence retrieval, Zod validation, and deterministic scoring. Codex and ChatGPT accelerated implementation and debugging, while I owned the product requirements, architecture decisions, testing, privacy model, and final acceptance.”
-

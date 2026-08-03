@@ -1,351 +1,350 @@
-# Waypoint — Complete Project Analysis and LinkedIn Preparation Brief
+# Waypoint — complete project analysis and LinkedIn launch plan
 
-**Repository package name:** `ai-career-finder`  
-**Current product name:** Waypoint  
-**Project type:** Full-stack, AI-assisted career intelligence web application  
-**Development context:** Solo personal project, built iteratively with ChatGPT and Codex as engineering collaborators  
-**Verified on:** 2 August 2026
+**Current branch:** `feat/public-multi-user-byok`<br>
+**Product status:** public multi-user implementation complete locally; hosted
+configuration and live-environment validation still pending.<br>
+**Claim discipline:** do not call the product production-ready or publicly
+launched until every P0 launch check below has evidence.
 
-## 1. One-sentence description
+## 1. Executive summary
 
-Waypoint is a private, evidence-grounded career intelligence workspace that builds a confirmed Master Profile, analyses job descriptions requirement by requirement, recommends whether to apply, investigate, or skip, selects the most suitable stored CV, and prepares reusable application information without inventing experience.
+Waypoint is a private-by-default, multi-user career intelligence application.
+It helps a person build a reviewable evidence base of career facts, keep that
+evidence separate from role-specific CVs, compare it with a job description,
+and prepare a truthful application.
 
-## 2. The problem
+The core product insight is that a CV is not the user. A CV is a selective
+presentation for one purpose; the Master Profile is the longer-lived source of
+confirmed career knowledge. Missing evidence is treated as uncertainty rather
+than proof that a person lacks a skill.
 
-Job seekers repeatedly move the same information between CVs, job descriptions, notes, application forms, and AI chats. General-purpose AI can become familiar with someone, but that understanding is difficult to inspect, correct, transfer, or use consistently. Conventional CV matchers also over-rely on keyword overlap, confuse missing evidence with missing ability, and can produce recommendations that are difficult to explain.
+Waypoint combines deterministic rules with bounded AI assistance. AI extracts
+and interprets structured information. Application code validates schemas and
+citations, owns scoring and blocker rules, selects fallbacks, and keeps
+AI-derived personal facts reviewable.
 
-Waypoint addresses this by separating three concepts:
+## 2. Complete user journey
 
-1. **Master Profile:** confirmed knowledge about the person.
-2. **Job intelligence:** an evidence-aware assessment of a particular opportunity.
-3. **CV presentation:** how well each CV communicates relevant, already-supported knowledge.
+1. A visitor reads the public landing page and creates an account.
+2. They use email/password or Google OAuth. Email confirmation, resend,
+   password recovery, reset, session refresh, and logout are supported.
+3. Supabase automatically provisions a private application identity, neutral
+   career modes, onboarding state, and usage limits.
+4. Onboarding explains AI data processing. The user accepts consent and chooses
+   OpenAI or Groq.
+5. The user validates and saves their own provider key. The saved plaintext key
+   is never returned to the browser.
+6. They add career facts manually or import a career narrative. Imported facts
+   remain proposed until reviewed.
+7. They upload PDF or DOCX CVs. Waypoint validates type/signature/size, extracts
+   text, creates sections and claims, and stores the source privately.
+8. They paste a job description. Waypoint extracts atomic requirements, finds
+   relevant confirmed evidence, evaluates gaps, calculates deterministic
+   scores, and produces an apply/investigate/skip recommendation.
+9. They can correct requirement criticality, re-score, re-parse, and compare
+   stored CVs without fabricating evidence.
+10. Application Kit stores reusable personal details and answers. Initial
+    values come only from that user's confirmed profile/CV; otherwise fields
+    are blank.
+11. The user can replace/delete provider keys, export structured account data,
+    remove CVs, or permanently delete the account after a recent sign-in and
+    typed confirmation.
 
-The key product insight is: **a CV is not the user**. A CV is a selective application document. The independent Master Profile is the source of career truth.
+## 3. Feature inventory
 
-## 3. What the product does
+### Public product and authentication
 
-### Workspace selection and public demo
+- Public landing, privacy overview, terms overview, loading, error, and 404 UI.
+- Email signup, optional confirmation, resend, login, logout, recovery, and
+  password reset through Supabase Auth.
+- Google OAuth with PKCE and allowlisted post-auth redirects.
+- Cookie-backed server sessions and protected-route proxying.
+- Automatic idempotent `auth.users` to application-user provisioning.
+- Resumable onboarding and explicit AI-processing consent.
 
-- Presents a gateway between a private personal workspace and a public-safe guided showcase.
-- Protects personal pages using Supabase authentication and a server-readable, HTTP-only workspace cookie.
-- Redirects demo visitors away from personal routes.
-- Provides a fictional candidate, prepared CVs, job analysis, and application answers.
-- Runs the public demo without Supabase personal-data reads or Groq/OpenAI calls.
-- Includes a guided six-step tour across Profile, Knowledge, CVs, Job Analysis, CV Selection, and Application Kit.
-- Stores only tour state locally in the visitor's browser.
+### Master Profile and knowledge
 
-### Home dashboard
+- Manual facts with type, confirmation state, tags, confidence, and provenance.
+- Career-narrative import into proposed candidates rather than silent truth.
+- Confirm/correct/reject review workflow and projection into canonical records.
+- Skills, aliases, evidence, assessments, preferences, constraints, career
+  modes, temporary states, observations, and uncertainty records.
+- Knowledge library, review queues, exception visibility, and insights.
+- Confirmed knowledge influences decisions; proposed/rejected/stale knowledge
+  remains inspectable but inactive.
 
-- Explains the three-step Waypoint workflow.
-- Displays live counts for confirmed Master Profile records, projects, CV documents, and completed job analyses.
-- Provides direct routes to job analysis and knowledge review.
-- Links to imported-record review, skill review, and manual profile facts.
+### CV workspace
 
-### Master Profile and narrative import
+- PDF and DOCX upload with extension, MIME, magic-byte, byte, page, and extracted
+  character limits.
+- Real PDF.js and Mammoth text extraction plus whitespace/layout normalization.
+- Deterministic section and visible-claim parsing.
+- Private Supabase Storage paths scoped by application-user ID.
+- CV processing status, listing, deletion, cleanup, and storage quota checks.
+- Separation between CV claims and the canonical Master Profile.
 
-- Accepts career information as natural-language narrative rather than requiring a large form.
-- Sends bounded narrative input through structured AI extraction.
-- Generates reviewable candidates instead of silently treating model output as truth.
-- Classifies candidates by reconciliation status, including safe additions, duplicates, and conflicts.
-- Lets the user activate an import only after reviewing its proposed effect.
-- Supports cumulative imports, allowing the user to add different parts of their background over time.
-- Preserves source information and import history.
-- Includes a repair endpoint for failed or incomplete import projection.
-- Retains a manual-facts workflow for career goals, interests, preferences, deal-breakers, eligibility, skills, experience, achievements, education, and writing style.
-- Supports editing, confirmation, and rejection lifecycle operations.
+### Job intelligence
 
-### Knowledge library
-
-- Organises confirmed career information into readable sections.
-- Supports searching across skills, projects, experience, preferences, and other facts.
-- Shows skill category, proficiency, evidence count, confidence, and relevant summaries.
-- Displays professional competencies, projects, experience, career direction, preferences, and eligibility.
-- Allows records to be edited directly from the library.
-- Separates user-facing career information from internal IDs and technical metadata through progressive disclosure.
-- Provides dedicated imported-record, skill-model, exceptions, and insights views.
-- Supports reviewing skill taxonomy changes individually or in batches.
-- Supports projecting approved review decisions into the canonical model.
-- Maintains an exceptions queue for conflicts, weak inferences, or unverifiable records.
-
-### Canonical knowledge model
-
-- Stores stable skill identities separately from changing assessments of proficiency.
-- Supports skill aliases, categories, hierarchies, and relationships.
-- Represents professional competencies separately from tool or technology skills.
-- Links skills and competencies to reusable experience, project, education, and achievement evidence.
-- Models career modes, typed preferences, constraints, decision policies, temporary state, historical observations, and uncertainty.
-- Uses lifecycle states such as proposed, confirmed, rejected, superseded, stale, and quarantined where applicable.
-- Tracks provenance, confidence, source references, validity, review timing, tags, and version information.
-- Uses relational and tag-based retrieval; embeddings and a vector database are deliberately excluded from the current design.
-
-### CV library and ATS-style parsing
-
-- Uploads PDF and DOCX CV files.
-- Accepts a display name, intended roles, and notes describing when a CV should be used.
-- Extracts document text using dedicated PDF and DOCX adapters.
-- Normalises line endings and preserves source offsets.
-- Detects common CV sections such as summary, experience, education, skills, projects, and certifications.
-- Converts visible content into deterministic, source-backed claims.
-- Stores the original file metadata, parsed text, sections, claims, parser version, and parse status.
-- Marks empty or failed snapshots as unusable so they cannot be recommended.
-- Lists stored CVs with parse status and summary metrics.
-- Allows CV deletion, including its associated stored document data.
-- Keeps CV content separate from Master Profile knowledge; uploading a CV does not redefine the user's identity.
-
-### Job-description analysis
-
-- Accepts a pasted job description and rejects input that is too short for meaningful analysis.
-- Uses AI to decompose the description into atomic requirements.
-- Captures requirement type, priority, criticality, normalised value, minimum years, source quote offsets, and parser confidence.
-- Falls back to a useful deterministic parser if AI parsing fails or quota is unavailable.
-- Retrieves a compact, requirement-specific subset of relevant profile knowledge rather than dumping the full profile into a prompt.
-- Uses semantic AI comparison to find direct, related, or transferable evidence.
-- Requires semantic matches to cite supplied record IDs; unsupported citations are discarded.
-- Falls back to deterministic matching if semantic comparison fails.
-- Classifies each requirement as supported, partially supported, unknown, or conflicting.
-- Distinguishes eligibility, mandatory-core, important, preferred, bonus, and unclear criticality.
-- Lets the user correct incorrectly classified criticality and then re-score the result.
-- Lets the user add missing knowledge discovered during analysis.
-- Allows re-scoring against the latest Master Profile without unnecessarily re-parsing the job.
-- Allows an explicit full re-parse when the stored requirement interpretation needs replacement.
-- Caches analysis only while the job text and knowledge fingerprint remain unchanged.
-
-### Scoring and recommendation method
-
-- Calculates requirement coverage using importance-weighted outcomes.
-- Measures knowledge coverage and evidence confidence separately.
-- Assesses eligibility, career-direction alignment, and preference alignment.
-- In the current v5 analysis engine, the assessed overall alignment weights are:
-  - requirements coverage: 80%;
-  - career direction: 15%;
-  - preferences: 5%.
-- Omits an unavailable alignment component from the denominator instead of pretending it was assessed.
-- Returns `apply` when there are no blockers, the score is at least 65, and knowledge coverage is at least 45.
-- Returns `investigate` when there is no confirmed blocker but the evidence or threshold is insufficient.
-- Returns `skip` when a confirmed eligibility or mandatory-core conflict is present.
-- Treats missing evidence as unknown, not proof that the user lacks a skill.
-- Exposes strengths, gaps, uncertainties, blockers, confidence, coverage, and semantic-provider status.
-- Persists the analysis, atomic requirements, scores, citations, selected CV, provider metadata, and knowledge fingerprint.
-
-### CV recommendation and tailoring
-
-- Ranks ready CVs only after evaluating the person's fit for the job.
-- Compares visible CV claims with supported job requirements.
-- Considers intended roles and the coverage of important requirements.
-- Identifies the strongest starting CV.
-- Explains what the selected CV already represents.
-- Identifies relevant confirmed knowledge that is missing from the document.
-- Produces targeted tailoring suggestions without upgrading or inventing experience.
-- Excludes failed and empty CV snapshots from recommendation.
+- Job-description normalization and structured atomic requirement extraction.
+- Requirement classification and editable criticality.
+- Evidence retrieval from confirmed user knowledge.
+- Supported, partially supported, unknown, and conflicting assessments.
+- Deterministic dimension scores, blocker handling, recommendation thresholds,
+  and apply/investigate/skip result.
+- Explicit deterministic fallback when semantic inference is unavailable.
+- Re-score after corrections and re-parse when requirements change.
+- CV ranking with explanations and truthful tailoring opportunities.
 
 ### Application Kit
 
-- Stores reusable application sections and answers.
-- Supports static details such as portfolio and LinkedIn links.
-- Supports reusable long-form answers such as “Tell us about yourself” and “Why should we hire you?”
-- Allows section titles, labels, and values to be edited.
-- Provides one-click copy interactions.
-- Tracks basic section/item metrics.
-- Persists items per user with ownership controls.
+- Editable sections for personal details, links, preferences, reusable answers,
+  and job-specific drafts.
+- Safe lazy seeding from the current user's confirmed profile and latest CV.
+- No creator-specific roles, preferences, or answers in new accounts.
+- Source labels distinguish profile, CV, manual, and generated content.
 
-## 4. How the intelligence works
+### BYOK AI providers
 
-The core pipeline is:
+- OpenAI and Groq through fixed official endpoints; arbitrary base URLs are not
+  accepted.
+- Validate, save, replace, list masked metadata, and delete a provider key.
+- AES-256-GCM encryption with a unique nonce and authenticated binding to user
+  ID plus provider.
+- Versioned deployment keyring for credential-key rotation.
+- Plaintext keys excluded from responses, browser storage, account exports,
+  URLs, and database rows.
+- Safe provider error categories for invalid credentials, rate limits, timeout,
+  model availability, provider availability, and invalid structured output.
+- Per-user daily AI/import/upload usage counters and storage allowance.
 
-`Source → deterministic source blocks → bounded AI extraction → schema validation → canonical knowledge → relevant evidence retrieval → semantic comparison → deterministic scoring`
+### Account lifecycle
 
-The division of responsibility is deliberate:
+- Structured JSON export without AI credentials or private storage paths.
+- Typed destructive confirmation.
+- Recent-sign-in requirement for account deletion.
+- Storage cleanup, application-data cascade, encrypted-credential removal, and
+  deletion of the Supabase Auth identity.
+- Same-origin protection on sensitive mutations.
 
-- **AI proposes and interprets.** It extracts candidates, parses ambiguous job language, and identifies semantic or transferable relationships.
-- **Application code validates.** Zod schemas, source-block checks, canonical IDs, and candidate-level validation reject malformed or unsupported output.
-- **Deterministic rules decide.** Code owns blockers, score aggregation, recommendation thresholds, cache invalidation, and whether evidence is allowed to support a claim.
-- **The user owns truth.** Imported personal knowledge must be reviewed or deterministically reconciled before becoming trusted.
+## 4. Intelligence method
 
-This design was adopted after practical failures with large, prompt-heavy workflows: inconsistent JSON, token limits, provider quotas, altered quotations, literal keyword matching, and repeated results that changed without a clear reason.
+```text
+user source material
+  → deterministic text blocks and identifiers
+  → bounded AI extraction or semantic interpretation
+  → Zod/schema, range, source-span, and citation validation
+  → proposed reviewable knowledge
+  → confirmed canonical evidence
+  → requirement-specific retrieval
+  → deterministic scoring, blockers, recommendation, and CV ranking
+```
 
-## 5. Technical architecture
+AI is used where language ambiguity matters. It does not own authorization,
+identity, storage paths, confirmation state, final scoring rules, or account
+lifecycle. This makes provider behavior replaceable and keeps critical product
+decisions testable without an AI call.
 
-### Domain layer — `src/domain`
+## 5. Public multi-user and security architecture
 
-Provider-independent business entities and rules: knowledge lifecycle, career modes, evidence, preferences, capabilities, CV artifacts, jobs, scoring, recommendations, and workspace isolation.
+- Supabase Auth is the identity authority; PostgreSQL uses a separate stable
+  application-user ID linked one-to-one to the Auth user.
+- Normal requests resolve the authenticated user server-side and use that
+  session's request-scoped Supabase client.
+- Row Level Security checks ownership for user tables and Storage objects.
+- Caller-provided user IDs are never accepted as identity proof.
+- Composite foreign keys prevent an Application Kit item from referencing
+  another tenant's section and a CV claim from referencing another document's
+  section.
+- End users can read their identity and edit only its display name; they cannot
+  rebind or directly delete it.
+- Service-role access is allowlisted for account administration, encrypted
+  credential storage, quota mutation, and narrowly scoped privileged RPCs.
+- CSP and security headers are configured, secret-bearing endpoints use
+  no-store responses, and supported credential endpoints are fixed.
 
-### Application layer — `src/application`
+Security is a layered design, not an absolute claim. Hosted migration state,
+provider settings, SMTP, redirects, monitoring, backups, and two-user tests must
+still be verified in the intended environment.
 
-Use cases and ports: profile facts, handover parsing/staging/review/projection, narrative import, job analysis contracts, and knowledge-library workflows.
+## 6. Technology and structure
 
-### Infrastructure layer — `src/infrastructure`
+- Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS
+- Supabase Auth, PostgreSQL, Storage, RLS, triggers, and security-definer RPCs
+- OpenAI and Groq adapters
+- Zod structured-output validation
+- PDF.js and Mammoth document extraction
+- Vitest unit/security tests and Playwright browser tests
+- GitHub Actions quality workflow
 
-Adapters for Supabase/PostgreSQL, Supabase Auth, OpenAI, Groq, PDF/DOCX extraction, deterministic CV parsing, analysis persistence, and server workspace assembly.
+Layers:
 
-### Delivery layer — `src/app` and `src/components`
+- `src/domain`: entities, lifecycle semantics, scoring, and decision rules.
+- `src/application`: provider-independent use cases and ports.
+- `src/infrastructure`: Supabase, Auth, AI, encryption, documents, quotas, and
+  account-lifecycle adapters.
+- `src/app` and `src/components`: App Router pages, route handlers, and UI.
+- `supabase/migrations`: forward-only schema, RLS, Storage, function, and grant
+  changes.
 
-Next.js App Router pages, server-rendered views, interactive React client components, route handlers, responsive UI, and route protection through the Next.js proxy convention.
+## 7. Verification evidence
 
-### Main technology stack
+The final pre-publish run must update this table with its date and commit SHA.
 
-- Next.js 16.2.11 with App Router and Turbopack
-- React 19.2.4
-- TypeScript 5
-- Tailwind CSS 4
-- Supabase/PostgreSQL, Storage, Row Level Security, and Auth
-- OpenAI SDK 6.49 with a provider-independent gateway
-- Groq using OpenAI-compatible structured inference
-- Zod 4 for runtime validation
-- PDF.js for PDF extraction
-- Mammoth for DOCX extraction
-- Vitest 3 for automated testing
-- ESLint 9 with Next.js configuration
+| Gate | Current local evidence | What it proves |
+| --- | --- | --- |
+| TypeScript | Passing | Compile-time contracts are consistent. |
+| ESLint | Passing | Configured static rules pass. |
+| Unit/security suite | 131 tests across 29 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
+| Real PDF parser test | Passing | Lazy-loaded PDF.js extracts a generated text PDF. |
+| Playwright public smoke | 3 tests passing | Landing, auth/legal pages, and safe health response. |
+| Production build | Passing | Next.js compiles and enumerates the intended routes. |
+| npm audit | 0 known vulnerabilities at last audit | Registry advisories at that point in time. |
+| Two-user Supabase integration | Harness implemented; live run pending | Requires a disposable migrated Supabase project. |
+| Google/email/BYOK live flow | Pending | Requires hosted provider and SMTP credentials. |
 
-## 6. Provider and prompt safeguards
+Passing automated tests do not prove production security, usability, provider
+behavior, accessibility, or user outcomes.
 
-- AI provider is selected using `AI_PROVIDER=groq|openai`.
-- Separate models can be configured for CV extraction, job parsing, and requirement matching.
-- Groq defaults to `openai/gpt-oss-20b`; OpenAI defaults to `gpt-5-mini` when no override is supplied.
-- Prompts and schemas are versioned.
-- Uploaded documents and job descriptions are treated as untrusted content, preventing instructions embedded in them from controlling the application.
-- Exact evidence is reconstructed from source blocks instead of trusting the model to reproduce quotations.
-- Structured outputs are validated before use.
-- Unsupported record IDs and citations are ignored.
-- Model failure is exposed through semantic status and deterministic fallback rather than disguised.
-- Personal APIs are never called from the public demo.
-- Service-role and provider secrets remain server-only.
+## 8. Honest limitations
 
-## 7. Persistence, privacy, and integrity
+- No production URL or public-user outcome evidence is recorded yet.
+- Google OAuth, email delivery, redirects, migrations, RLS, and Storage have not
+  yet been verified together in the final hosted project.
+- The destructive two-user integration suite requires a disposable Supabase
+  environment and must never target production.
+- OpenAI/Groq cost, retention, availability, and model behavior remain subject
+  to the user's provider account and terms.
+- The legal pages are implementation overviews, not final legal documents;
+  operator identity, contact, retention, hosting region, subprocessors, and
+  jurisdiction-specific language are still required.
+- Malware scanning for uploaded files needs an explicit launch decision.
+- Monitoring, backup restore, accessibility, mobile, and performance checks
+  need live-environment evidence.
+- `private: true` in `package.json` prevents accidental npm publication; it
+  says nothing about GitHub repository visibility or licensing.
 
-- PostgreSQL migrations define users, source documents, profile knowledge, jobs, requirements, analyses, scores, citations, review events, CV systems, narrative imports, and Application Kit data.
-- User-owned tables include an owner ID and Row Level Security policies.
-- Source documents, source locators, extraction metadata, confidence, and lifecycle status support auditability.
-- Database functions provide atomic staging, review, projection, CV registration, profile activation, and archival operations.
-- Major intelligence rebuilds are additive and can create immutable archives before derived records are replaced.
-- Personal routes require both personal workspace mode and an authenticated Supabase user linked to the private prototype profile.
-- The present authentication model is intentionally a single linked personal profile, not a general multi-tenant signup product.
+## 9. Before posting on LinkedIn
 
-## 8. Important engineering decisions
+### P0 — required before presenting it as live
 
-1. **Hybrid knowledge model:** simple facts remain simple; behaviorally important concepts use typed records.
-2. **Explicit career modes:** a job must be assessed in a selected context; content does not silently switch modes.
-3. **Deterministic, multi-axis recommendations:** AI does not freely choose the final decision.
-4. **Relational retrieval before embeddings:** canonical records, relationships, tags, and evidence links are sufficient for the current workflows.
-5. **Proposed before confirmed:** imported information cannot bypass review merely because a model sounds confident.
-6. **CVs are presentation artifacts:** CV parsing evaluates visible communication and does not populate personal truth.
-7. **Graceful degradation:** provider failure should still return a useful, clearly labelled deterministic result.
-8. **Public/private separation:** the portfolio demo is fictional, isolated, and provider-free.
+- Provision separate staging and production Supabase projects.
+- Apply every migration and run database lint/migration inspection.
+- Configure email delivery, confirmation, recovery, Google OAuth, site URL, and
+  exact local/preview/production redirect allowlists.
+- Store the Supabase service role and credential-encryption keyring only in the
+  deployment secret manager.
+- Run `npm run test:integration` against disposable staging and preserve its
+  output as evidence.
+- Test two real accounts across database rows, guessed UUIDs, modified bodies,
+  Storage paths, signed URLs, RPCs, exports, and deletion.
+- Test both provider-key flows with low-value test keys: invalid, valid,
+  replace, delete, quota, timeout, and provider error states.
+- Upload representative fictional PDF and DOCX files in the deployed Node 22
+  runtime and verify parsing plus deletion.
+- Complete privacy/terms/operator details, monitoring, backups, and a rollback
+  procedure.
 
-## 9. What is verified as working
+### P1 — required for a strong portfolio launch
 
-The following checks were run against the current repository on 2 August 2026:
+- Run keyboard, screen-reader, contrast, mobile, empty/error/loading, and slow
+  network checks.
+- Capture screenshots using fictional data only: landing, onboarding, provider
+  settings with masked key, Master Profile, CV workspace, job analysis,
+  evidence explanation, and Application Kit.
+- Record a 60–90 second demo using a dedicated fictional account and provider
+  key; revoke the key after recording.
+- Verify repository visibility, license, README links, CI checks, and the exact
+  commit deployed.
+- Ask several people to complete signup → onboarding → first analysis without
+  coaching and record qualitative findings honestly.
 
-- TypeScript: passed (`npm run typecheck`).
-- ESLint: passed (`npm run lint`).
-- Automated tests: **101 passed across 23 test files** (`npm test`).
-- Next.js production build: passed (`npm run build`).
-- Build output recognises 42 dynamic pages/API routes plus the route-protection proxy.
+## 10. Recommended LinkedIn story
 
-Automated coverage includes handover parsing and validation, lifecycle and review rules, import staging and projection, skill-model behavior, document extraction, PDF layout handling, deterministic CV parsing, job analysis and fallback behavior, AI schemas and gateway selection, persistence adapters, workspace isolation, and demo-fixture privacy.
+Use this sequence:
 
-## 10. Honest limitations and current risks
+1. **Problem:** career context trapped in chats and CV files is hard to inspect,
+   trust, or reuse.
+2. **Insight:** a CV is a presentation, not a complete professional identity.
+3. **Model:** Master Profile → job requirements → evidence assessment → CV
+   selection → Application Kit.
+4. **AI boundary:** AI interprets language; deterministic code owns validation,
+   scoring, blockers, and recommendations.
+5. **Public-product challenge:** multi-user Auth, RLS, private Storage, encrypted
+   BYOK credentials, consent, quotas, export, and deletion.
+6. **Engineering lesson:** tenant isolation must be enforced in the database,
+   not only by route filters.
+7. **Proof:** link the deployed build, repository, CI run, screenshots, and
+   accurate test results.
+8. **Honesty:** state what is locally verified and what is live-validated.
+9. **CTA:** invite feedback from product engineers, full-stack teams, AI UX
+   practitioners, and career-tool builders.
 
-- This is a portfolio-ready personal product, not a production SaaS with open registration and multiple independent customers.
-- Authentication is limited to a Supabase account explicitly linked to the private prototype profile.
-- A real deployment still requires correct Supabase migrations, storage configuration, auth settings, environment variables, and an AI-provider key.
-- The current overall job score is still displayed even though the frozen architecture prefers multi-axis explanation over reliance on one opaque number; the UI should continue to foreground the component evidence.
-- Formal usability research with external job seekers has not yet been conducted; validation is primarily repeated first-party task testing.
-- There are no stated automated end-to-end browser tests, accessibility audit results, performance budgets, or production monitoring checks in the present verification suite.
-- The production build succeeds but prints non-fatal server-side PDF polyfill warnings for `DOMMatrix`, `ImageData`, and `Path2D`. This should be investigated or documented before presenting the build as warning-free.
-- The top-level `README.md` and `PROJECT_STATUS.md` describe an older milestone and materially understate current functionality.
-- The repository package is still named AI Career Finder while the UI and case studies use Waypoint; naming should be made consistent before public launch.
-- The repository is marked `private` in `package.json`; public GitHub visibility, licensing, sanitisation, and deployment status must be decided separately.
-- Application Kit content is reusable and editable, but the current code should not be described as a complete AI cover-letter/interview/application-tracking suite.
-- The demo uses prepared deterministic data; it demonstrates the workflow, not live AI inference.
+### Draft balanced post
 
-## 11. What to complete before posting on LinkedIn
+> I built Waypoint, a multi-user career intelligence application designed
+> around one idea: your CV is not your full professional identity.
+>
+> Waypoint keeps a reviewable Master Profile of confirmed evidence, compares it
+> with atomic job requirements, explains uncertainty and conflicts, recommends
+> whether to apply or investigate, and helps select the strongest truthful CV.
+>
+> AI handles bounded extraction and semantic interpretation. Deterministic code
+> owns schema validation, citations, scoring, blockers, and the final
+> recommendation.
+>
+> Turning the prototype into a public product meant building email and Google
+> authentication, per-user onboarding and consent, PostgreSQL RLS, private file
+> storage, encrypted OpenAI/Groq bring-your-own-key credentials, quotas, export,
+> and account deletion.
+>
+> The most important engineering lesson was that tenant isolation cannot depend
+> on adding `user_id` filters everywhere. It needs request-scoped sessions,
+> database policies, ownership-aware relationships, and adversarial two-account
+> testing.
+>
+> [Add verified live URL, repository, final test evidence, and CTA here.]
 
-### Must do
+## 11. Safe and unsafe claims
 
-- Choose one public name and use it consistently: recommended **Waypoint** with “AI Career Finder” as a descriptive subtitle.
-- Rewrite the top-level README to match the current product, screenshots, architecture, setup, demo, privacy model, and verified test count.
-- Remove or clearly label historical status documents so visitors do not conclude that major workflows are unfinished.
-- Decide whether the GitHub repository will be public. If yes, audit the full Git history and tracked files for personal data, CV content, email addresses, IDs, screenshots, logs, and secrets.
-- Add a licence and contribution/contact expectations appropriate for a portfolio project.
-- Deploy the public-safe demo and test every tour step in the production environment.
-- Confirm the private workspace cannot be accessed by an unauthenticated or demo-mode visitor.
-- Verify the demo makes zero AI-provider calls and reads no private Supabase records.
-- Capture clean desktop and mobile screenshots using only fictional data.
-- Record a short product video showing the problem, Master Profile, job analysis, evidence, CV decision, and Application Kit.
-- Investigate the PDF polyfill build warnings and confirm PDF/DOCX upload behavior in the actual deployment runtime.
-- Run the complete quality gate once more from a clean checkout before posting.
+Safe after the final local gate:
 
-### Strongly recommended
+- “Implemented multi-user accounts with Supabase Auth.”
+- “Supports email/password and Google OAuth flows.”
+- “Encrypts per-user OpenAI/Groq API keys with AES-256-GCM.”
+- “Uses request-scoped clients, PostgreSQL RLS, and private Storage policies.”
+- “Combines bounded AI interpretation with deterministic scoring.”
+- “Includes account export and deletion workflows.”
 
-- Add end-to-end tests for workspace selection, login protection, narrative import, CV upload/delete, job analysis, correction/re-score, and the full demo tour.
-- Run an accessibility audit covering keyboard navigation, focus management, labels, contrast, reduced motion, and screen-reader announcements.
-- Run responsive checks on common phone, tablet, laptop, and wide desktop sizes.
-- Add error monitoring and minimal privacy-safe operational logging for the deployed demo.
-- Add Open Graph metadata, favicon/brand artwork, a social preview image, and a clear portfolio CTA.
-- Add architecture and workflow diagrams to the README or case study.
-- Show one transparent example of a requirement moving through retrieval, semantic interpretation, deterministic validation, and scoring.
-- Document AI assistance honestly: what Codex/ChatGPT helped with and which product, architecture, privacy, and acceptance decisions remained yours.
-- Ask two or three people to complete the demo without coaching and note where terminology or navigation is unclear.
+Only safe after live evidence:
 
-### Optional next product work
+- “Deployed,” “publicly available,” or “production-ready.”
+- “Google login works in production.”
+- “Tenant isolation is verified end to end.”
+- “Secure,” “accessible,” “fast,” or “reliable” without a scoped qualifier and
+  supporting test evidence.
+- Any user count, outcome, accuracy, conversion, time-saved, or cost claim.
 
-- Analysis history and comparison over time.
-- Multi-user onboarding and account lifecycle.
-- Privacy export and deletion UX.
-- Job/application tracking and outcome feedback.
-- Job-specific generated answers, cover letters, and interview preparation grounded in confirmed evidence.
-- Mobile refinements for long evidence and requirement lists.
-- Evaluation datasets for semantic matching quality and provider comparisons.
+## 12. Prompt for final LinkedIn packaging
 
-## 12. Recommended LinkedIn story structure
+> Act as a senior technical portfolio editor and LinkedIn strategist. Treat
+> this Waypoint analysis and its linked verification artifacts as the only
+> factual source. Do not invent users, metrics, research, production scale,
+> security guarantees, or live validation. Ask for my target roles, deployed
+> URL, repository URL/visibility, final CI run, screenshots, and tone. Then
+> produce: a launch-risk gap check, technical/product/balanced posts, a maximum
+> ten-slide carousel, a 60–90 second demo script, screenshot captions, an honest
+> AI-assisted-development statement, and a claim-to-evidence checklist.
 
-Use the post to tell one engineering/product story rather than listing every feature:
+## 13. Evidence map
 
-1. **Hook:** “A CV is not the user.”
-2. **Problem:** career context is fragmented across CVs, notes, job descriptions, forms, and AI conversations.
-3. **Insight:** create a confirmed Master Profile, then assess the person first and the CV second.
-4. **System:** AI handles bounded interpretation; deterministic code owns validation, evidence, blockers, and final recommendations.
-5. **Hard lessons:** unreliable structured output, altered quotations, literal skill matching, token/rate limits, and privacy requirements forced architectural changes.
-6. **Result:** a private workspace plus a fictional, zero-AI-cost public demo.
-7. **Proof:** 101 tests, TypeScript, lint, and production build pass.
-8. **Reflection:** explain what you would validate with real users next.
-9. **CTA:** invite feedback on evidence-based AI UX, career tools, or the public demo.
-
-## 13. Short LinkedIn-ready project description
-
-I built **Waypoint**, an evidence-grounded career intelligence workspace that turns confirmed skills, experience, projects, preferences, and eligibility into explainable job decisions.
-
-Instead of treating a CV as the complete source of truth, Waypoint maintains an independent Master Profile. It parses a job description into atomic requirements, retrieves relevant evidence, uses AI for bounded semantic interpretation, and applies deterministic rules to recommend whether to apply, investigate, or skip. It then compares stored CVs, recommends the strongest starting version, and identifies truthful tailoring opportunities.
-
-The project uses Next.js 16, React 19, TypeScript, Supabase/PostgreSQL, Groq/OpenAI-compatible inference, Zod, PDF.js, Mammoth, Tailwind CSS, and Vitest. The current repository passes TypeScript, ESLint, 101 automated tests across 23 files, and a production build.
-
-The most important lesson was learning where AI should stop: models can propose and interpret, but the product must own evidence, validation, permissions, scoring, and final decisions.
-
-## 14. Copy-ready prompt for planning the final LinkedIn launch with ChatGPT
-
-Paste this document into ChatGPT with the following instruction:
-
-> Act as a senior product marketer, technical portfolio reviewer, and LinkedIn content strategist. Use the attached Waypoint project analysis as the factual source of truth. Do not invent users, metrics, production scale, research findings, or features. First identify the strongest positioning for the audiences I want to reach: recruiters, frontend/full-stack engineering teams, product engineering teams, and product/UX design teams. Then create: (1) a gap analysis of what must be completed before publishing, ranked by launch risk and portfolio value; (2) a seven-day execution plan; (3) three LinkedIn post variants—technical, product/UX, and balanced; (4) a carousel outline of no more than ten slides; (5) a 60–90 second demo-video script and shot list; (6) a GitHub README outline; (7) suggested screenshots and captions; (8) honest wording for explaining my use of ChatGPT and Codex; and (9) a final evidence checklist that verifies every public claim against the project. Ask me for my target roles, live demo URL, GitHub visibility, screenshots, and preferred tone before finalising the copy.
-
-## 15. Claims that are safe to make now
-
-- “Built a full-stack evidence-grounded career intelligence application.”
-- “Designed and implemented a private workspace and isolated public demo.”
-- “Used AI for structured extraction and semantic interpretation, with deterministic validation and scoring.”
-- “Implemented PDF/DOCX CV parsing, job-requirement analysis, CV recommendation, and reusable application content.”
-- “Used Next.js, React, TypeScript, Supabase/PostgreSQL, Groq/OpenAI-compatible inference, Zod, and Vitest.”
-- “101 automated tests across 23 test files pass.”
-- “Type checking, linting, and the production build pass.”
-- “Developed solo with ChatGPT and Codex as engineering collaborators.”
-
-## 16. Claims to avoid unless additional evidence is collected
-
-- “Production-ready SaaS.”
-- “Used by job seekers” or any user count.
-- “Improves hiring outcomes,” “increases interview rate,” or “saves X hours.”
-- “Bias-free,” “hallucination-free,” or “100% accurate.”
-- “Fully accessible” without an audit.
-- “Secure” as an absolute; describe the implemented controls instead.
-- “Complete career platform” if referring to tracking, cover letters, interviews, or outcome learning.
-- “AI chooses the best career” or “AI makes the final decision.”
-- “Live AI demo” when showing the prepared public showcase.
+- Product overview and setup: `README.md`
+- Architecture: `docs/architecture/README.md`
+- Public deployment: `docs/deployment/public-deployment.md`
+- Security contract: `docs/security/public-multi-user-threat-model.md`
+- Database and isolation harness: `supabase/README.md` and `integration/`
+- Auth routes: `src/app/api/auth/` and `src/app/auth/`
+- BYOK encryption/settings: `src/infrastructure/ai/` and
+  `src/app/api/v1/settings/ai-credentials/`
+- Deterministic analysis: `src/infrastructure/job-analysis/` and `src/domain/`
+- Quality automation: `.github/workflows/quality.yml`, `vitest.config.mts`, and
+  `playwright.config.ts`

@@ -4,10 +4,6 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 import mammoth from "mammoth";
-import {
-  getDocument,
-  GlobalWorkerOptions,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
 
 import { DocxDocumentTextExtractor } from "./docx-document-text-extractor";
 import { PdfDocumentTextExtractor } from "./pdf-document-text-extractor";
@@ -16,25 +12,17 @@ import { RoutedDocumentTextExtractor } from "./document-text-extractor";
 
 const MAX_PDF_PAGES = 50;
 const MAX_EXTRACTED_CHARACTERS = 200_000;
-
-GlobalWorkerOptions.workerSrc = pathToFileURL(
-  join(
-    process.cwd(),
-    "node_modules",
-    "pdfjs-dist",
-    "legacy",
-    "build",
-    "pdf.worker.mjs",
-  ),
-).href;
+let pdfJsPromise: Promise<typeof import("pdfjs-dist/legacy/build/pdf.mjs")> | undefined;
 
 export function createDocumentTextExtractor() {
   return new RoutedDocumentTextExtractor([
     new PdfDocumentTextExtractor({
       async parse(bytes) {
-        const task = getDocument({
+        const pdfJs = await loadPdfJs();
+        const task = pdfJs.getDocument({
           data: bytes,
           isEvalSupported: false,
+          useSystemFonts: true,
           useWorkerFetch: false,
         });
         const document = await task.promise;
@@ -70,4 +58,21 @@ export function createDocumentTextExtractor() {
       },
     }),
   ]);
+}
+
+async function loadPdfJs() {
+  pdfJsPromise ??= import("pdfjs-dist/legacy/build/pdf.mjs").then((pdfJs) => {
+    pdfJs.GlobalWorkerOptions.workerSrc = pathToFileURL(
+      join(
+        process.cwd(),
+        "node_modules",
+        "pdfjs-dist",
+        "legacy",
+        "build",
+        "pdf.worker.mjs",
+      ),
+    ).href;
+    return pdfJs;
+  });
+  return pdfJsPromise;
 }

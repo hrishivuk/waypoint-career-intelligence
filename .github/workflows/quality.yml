@@ -31,3 +31,21 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+
+  tenant-isolation:
+    if: ${{ vars.RUN_SUPABASE_INTEGRATION == 'true' }}
+    runs-on: ubuntu-latest
+    environment: integration-test
+    env:
+      SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+      SUPABASE_TEST_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
+      SUPABASE_TEST_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_TEST_SERVICE_ROLE_KEY }}
+      SUPABASE_TEST_ALLOW_MUTATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:integration

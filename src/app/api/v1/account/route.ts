@@ -5,6 +5,7 @@ import {
   AuthenticationRequiredError,
   requireAuthenticatedContext,
 } from "@/infrastructure/auth/supabase-identity";
+import { hasRecentSignIn } from "@/infrastructure/auth/recent-auth";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,13 @@ export async function DELETE(request: Request) {
         { status: 400, headers },
       );
     }
-    const { actor } = await requireAuthenticatedContext();
+    const { actor, authUser } = await requireAuthenticatedContext();
+    if (!hasRecentSignIn(authUser.last_sign_in_at)) {
+      return Response.json(
+        { error: "For your security, sign out and sign in again before deleting your account.", code: "RECENT_AUTH_REQUIRED" },
+        { status: 403, headers },
+      );
+    }
     await deleteAccountData(getSupabaseServerClient(), actor);
     return new Response(null, { status: 204, headers });
   } catch (error) {

@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
     "import:handover": "vite-node --script scripts/stage-handover.ts",
     "project:handover": "vite-node --script scripts/project-reviewed-handover.ts",
     "plan:skill-taxonomy": "vite-node --script scripts/plan-skill-taxonomy-v2.ts",

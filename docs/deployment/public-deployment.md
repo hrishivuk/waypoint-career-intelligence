@@ -221,14 +221,13 @@ Smoke-test at least:
 - data export and account deletion; and
 - desktop/mobile keyboard navigation, focus, labels, errors, and empty states.
 
-### Known PDF.js warning
+### Document-parser runtime check
 
-The Next.js production build can emit non-fatal server-side PDF.js warnings
-about `DOMMatrix`, `ImageData`, and `Path2D` polyfills. A successful build does
-not prove document extraction works in the hosting runtime. Upload and parse
-representative, fictional PDFs and DOCX files in staging and production. Track
-the warning as unresolved until the runtime behavior and an appropriate
-polyfill or PDF.js loading strategy have been explicitly verified.
+PDF.js is lazy-loaded only when a PDF is processed, so the production build no
+longer initializes its rendering compatibility layer. Deploy on Node.js 22 or
+newer, then upload and parse representative, fictional PDFs and DOCX files in
+staging and production. A successful build alone does not prove extraction
+works in the hosting runtime.
 
 ## 9. Production controls
 
