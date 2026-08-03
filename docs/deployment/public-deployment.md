@@ -239,6 +239,13 @@ and concurrent-AI lease enforcement. Cleanup verification found zero temporary
 Auth/application users and zero active leases. This evidence does not replace
 Google OAuth, SMTP, provider-key, or deployed-browser validation.
 
+Google was subsequently enabled in the hosted Supabase project. Waypoint's
+local PKCE initiation reached the Google Accounts sign-in page through the
+hosted Supabase callback without an invalid-client or redirect-mismatch error.
+This verifies initiation only; complete one interactive sign-in and confirm the
+returned Waypoint session before treating Google authentication as end-to-end
+validated.
+
 ## 9. Production controls
 
 Before public traffic:

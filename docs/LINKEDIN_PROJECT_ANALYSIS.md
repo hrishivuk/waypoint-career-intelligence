@@ -202,7 +202,8 @@ The final pre-publish run must update this table with its date and commit SHA.
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |
 | npm audit | 0 known vulnerabilities at last audit | Registry advisories at that point in time. |
 | Two-user Supabase integration | 2 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation and AI concurrency in the linked Supabase project. |
-| Google/email/BYOK live flow | Pending | Requires hosted provider and SMTP credentials. |
+| Google OAuth initiation | Hosted provider enabled; PKCE redirect reached Google's sign-in UI without redirect mismatch on 3 August 2026 | Client/provider/callback initiation is configured; an interactive completed sign-in is still required. |
+| Email/BYOK live flow | Pending | Requires inbox confirmation and low-value provider test keys. |
 
 Passing automated tests do not prove production security, usability, provider
 behavior, accessibility, or user outcomes.
