@@ -6,6 +6,7 @@ import {
   getJobDisplayIdentity,
   getRecommendationPresentation,
   isUuid,
+  uniqueTextItems,
 } from "./presentation";
 
 describe("job recommendation presentation", () => {
@@ -107,5 +108,19 @@ describe("job display identity", () => {
       title: "Untitled role",
       company: "Company not identified",
     });
+  });
+});
+
+describe("job result list presentation", () => {
+  it("removes repeated and empty AI-generated list items", () => {
+    expect(
+      uniqueTextItems([
+        "Strong React expertise",
+        " Strong React expertise ",
+        "strong react expertise",
+        "",
+        "Evidence-led delivery",
+      ]),
+    ).toEqual(["Strong React expertise", "Evidence-led delivery"]);
   });
 });

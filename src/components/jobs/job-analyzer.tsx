@@ -13,7 +13,10 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import type { JobAnalysisResult } from "@/application/job-analysis";
+import {
+  type JobAnalysisResult,
+  uniqueTextItems,
+} from "@/application/job-analysis";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -244,7 +247,7 @@ export function JobAnalyzer() {
             </h2>
             {result.strengths.length ? (
               <ul className="mt-3 space-y-3">
-                {result.strengths.slice(0, 5).map((strength) => (
+                {uniqueTextItems(result.strengths).slice(0, 5).map((strength) => (
                   <li
                     key={strength}
                     className="flex gap-3 text-sm leading-6 text-foreground"
@@ -271,7 +274,7 @@ export function JobAnalyzer() {
             </h2>
             {result.gaps.length ? (
               <div className="mt-3 space-y-3">
-                {result.gaps.slice(0, 5).map((gap) => {
+                {uniqueTextItems(result.gaps).slice(0, 5).map((gap) => {
                   const required = result.blockers.includes(gap);
                   return (
                     <div
@@ -328,7 +331,7 @@ export function JobAnalyzer() {
                   <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
                 </summary>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {result.bestCv.representedRequirements.map((item) => (
+                  {uniqueTextItems(result.bestCv.representedRequirements).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -341,7 +344,7 @@ export function JobAnalyzer() {
                   <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
                 </summary>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {result.bestCv.missingImportantKnowledge.map((item) => (
+                  {uniqueTextItems(result.bestCv.missingImportantKnowledge).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
@@ -354,7 +357,7 @@ export function JobAnalyzer() {
                   <ChevronDown aria-hidden="true" className="size-4 transition-transform group-open:rotate-180" />
                 </summary>
                 <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {result.bestCv.suggestedChanges.map((item) => (
+                  {uniqueTextItems(result.bestCv.suggestedChanges).map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>

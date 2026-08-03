@@ -82,6 +82,18 @@ export function getJobDisplayIdentity(input: {
   };
 }
 
+export function uniqueTextItems(values: readonly string[]) {
+  const seen = new Set<string>();
+  return values.reduce<string[]>((items, value) => {
+    const cleaned = value.trim();
+    const identity = cleaned.toLocaleLowerCase();
+    if (!cleaned || seen.has(identity)) return items;
+    seen.add(identity);
+    items.push(cleaned);
+    return items;
+  }, []);
+}
+
 function cleanDisplayValue(value: string | null | undefined) {
   const cleaned = value?.trim();
   return cleaned ? cleaned : null;
