@@ -11,6 +11,13 @@ export class UsageLimitExceededError extends Error {
   }
 }
 
+export class AiConcurrencyLimitExceededError extends Error {
+  constructor() {
+    super("Too many AI requests are already running. Wait for one to finish and try again.");
+    this.name = "AiConcurrencyLimitExceededError";
+  }
+}
+
 export async function consumeUsage(userId: string, kind: UsageKind, amount = 1) {
   const { error } = await getSupabaseServerClient().rpc(
     "consume_waypoint_daily_usage",
@@ -19,6 +26,31 @@ export async function consumeUsage(userId: string, kind: UsageKind, amount = 1) 
   if (!error) return;
   if (error.code === "P0001") throw new UsageLimitExceededError(kind);
   throw error;
+}
+
+export async function withAiUsageLease<T>(userId: string, action: () => Promise<T>) {
+  const client = getSupabaseServerClient();
+  const acquired = await client.rpc("acquire_waypoint_ai_request_lease", {
+    target_user_id: userId,
+    lease_seconds: 300,
+  });
+  if (acquired.error) {
+    if (acquired.error.code === "P0001" && acquired.error.message.includes("AI_CONCURRENCY_LIMIT")) {
+      throw new AiConcurrencyLimitExceededError();
+    }
+    throw acquired.error;
+  }
+  const leaseId = String(acquired.data);
+  try {
+    await consumeUsage(userId, "ai_requests");
+    return await action();
+  } finally {
+    const released = await client.rpc("release_waypoint_ai_request_lease", {
+      target_user_id: userId,
+      target_lease_id: leaseId,
+    });
+    if (released.error) console.error("Unable to release AI request lease.");
+  }
 }
 
 export async function assertStorageAllowance(userId: string, incomingBytes: number) {

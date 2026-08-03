@@ -58,6 +58,11 @@ The default public-beta limits are 25 AI requests, 5 imports, and 10 uploads per
 day, 100 MiB storage, and 2 concurrent AI requests. Adjust them through an
 audited server/admin operation rather than a browser write.
 
+Each provider call acquires an expiring row in `ai_request_leases` under a
+transactional per-user lock. Calls release their lease in `finally`; abandoned
+leases expire and are reclaimed on the next acquisition. Browser roles have no
+access to the lease table or its acquire/release functions.
+
 Storage object names must use this layout:
 
 ```text

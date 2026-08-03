@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/infrastructure/persistence/supabase-server";
-import { consumeUsage } from "@/infrastructure/usage/consume-usage";
+import { withAiUsageLease } from "@/infrastructure/usage/consume-usage";
 
 import { createCareerAiGateway } from "./create-career-ai-gateway";
 import type { CareerAiGateway } from "./gateway";
@@ -44,9 +44,17 @@ export async function createUserCareerAiGateway(
   for (const provider of providers) {
     const credential = await repository.resolve(provider);
     if (credential) {
-      await consumeUsage(userId, "ai_requests");
-      return createCareerAiGateway(process.env, credential);
+      return withUsageLeases(createCareerAiGateway(process.env, credential), userId);
     }
   }
   throw new AiCredentialRequiredError();
+}
+
+function withUsageLeases(gateway: CareerAiGateway, userId: string): CareerAiGateway {
+  return {
+    extractCareerNarrative: (input) => withAiUsageLease(userId, () => gateway.extractCareerNarrative(input)),
+    extractCvFacts: (input) => withAiUsageLease(userId, () => gateway.extractCvFacts(input)),
+    parseJobDescription: (input) => withAiUsageLease(userId, () => gateway.parseJobDescription(input)),
+    matchJobRequirements: (input) => withAiUsageLease(userId, () => gateway.matchJobRequirements(input)),
+  };
 }

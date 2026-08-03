@@ -111,6 +111,42 @@ describe("two-user RLS and Storage isolation", () => {
     const removeOwn = await userA.client.storage.from("career-documents").remove([objectPath]);
     expect(removeOwn.error).toBeNull();
   });
+
+  it("enforces and releases the configured per-user AI concurrency limit", async () => {
+    const first = await admin.rpc("acquire_waypoint_ai_request_lease", {
+      target_user_id: userA.applicationUserId,
+      lease_seconds: 60,
+    });
+    const second = await admin.rpc("acquire_waypoint_ai_request_lease", {
+      target_user_id: userA.applicationUserId,
+      lease_seconds: 60,
+    });
+    expect(first.error).toBeNull();
+    expect(second.error).toBeNull();
+
+    const rejected = await admin.rpc("acquire_waypoint_ai_request_lease", {
+      target_user_id: userA.applicationUserId,
+      lease_seconds: 60,
+    });
+    expect(rejected.error?.message).toContain("AI_CONCURRENCY_LIMIT");
+
+    for (const lease of [first.data, second.data]) {
+      const released = await admin.rpc("release_waypoint_ai_request_lease", {
+        target_user_id: userA.applicationUserId,
+        target_lease_id: lease,
+      });
+      expect(released.error).toBeNull();
+    }
+    const reacquired = await admin.rpc("acquire_waypoint_ai_request_lease", {
+      target_user_id: userA.applicationUserId,
+      lease_seconds: 60,
+    });
+    expect(reacquired.error).toBeNull();
+    await admin.rpc("release_waypoint_ai_request_lease", {
+      target_user_id: userA.applicationUserId,
+      target_lease_id: reacquired.data,
+    });
+  });
 });
 
 interface TestActor {

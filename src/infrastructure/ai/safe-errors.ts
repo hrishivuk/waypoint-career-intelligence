@@ -70,6 +70,7 @@ export function safeAiErrorMessage(error: unknown): string {
     "AiCredentialRequiredError",
     "AiConsentRequiredError",
     "UsageLimitExceededError",
+    "AiConcurrencyLimitExceededError",
   ].includes(error.name)) return error.message;
   const status = readStatus(error);
   const code = readCode(error);

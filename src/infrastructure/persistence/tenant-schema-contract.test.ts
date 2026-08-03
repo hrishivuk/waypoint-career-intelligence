@@ -30,4 +30,12 @@ describe("public multi-user schema contract", () => {
     expect(sql).toContain("career_narrative_candidates");
     expect(sql).toContain("to authenticated");
   });
+
+  it("enforces per-user concurrent AI requests with expiring server-only leases", () => {
+    const sql = read("202608030001_ai_request_concurrency.sql");
+    expect(sql).toContain("for update");
+    expect(sql).toContain("AI_CONCURRENCY_LIMIT");
+    expect(sql).toContain("expires_at <= timezone('utc', now())");
+    expect(sql).toContain("revoke all on table public.ai_request_leases from anon, authenticated");
+  });
 });

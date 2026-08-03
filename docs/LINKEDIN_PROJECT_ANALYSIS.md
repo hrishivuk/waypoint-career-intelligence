@@ -115,7 +115,8 @@ AI-derived personal facts reviewable.
   URLs, and database rows.
 - Safe provider error categories for invalid credentials, rate limits, timeout,
   model availability, provider availability, and invalid structured output.
-- Per-user daily AI/import/upload usage counters and storage allowance.
+- Per-user daily AI/import/upload usage counters, storage allowance, and
+  expiring database-backed concurrent-AI request leases.
 
 ### Account lifecycle
 
@@ -194,7 +195,7 @@ The final pre-publish run must update this table with its date and commit SHA.
 | --- | --- | --- |
 | TypeScript | Passing | Compile-time contracts are consistent. |
 | ESLint | Passing | Configured static rules pass. |
-| Unit/security suite | 131 tests across 29 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
+| Unit/security suite | 135 tests across 30 files passing on 3 August 2026 | Deterministic logic and static security contracts. |
 | Real PDF parser test | Passing | Lazy-loaded PDF.js extracts a generated text PDF. |
 | Playwright public smoke | 3 tests passing | Landing, auth/legal pages, and safe health response. |
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |
