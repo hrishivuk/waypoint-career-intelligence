@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { safeAuthRedirect } from "@/infrastructure/auth/auth-redirect";
 import { createSupabaseAuthServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { resolvePostAuthRedirect } from "@/infrastructure/auth/post-auth-redirect";
 import { authError, emailSchema, passwordSchema } from "../_shared";
 
 const schema = z.object({
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     if (error || !data.user) {
       return authError("Email or password is incorrect.", 401);
     }
-    return Response.json({ ok: true, redirectTo: safeAuthRedirect(parsed.data.next) });
+    return Response.json({ ok: true, redirectTo: await resolvePostAuthRedirect(auth, parsed.data.next) });
   } catch (error) {
     console.error("Sign in failed", error);
     return authError("Sign-in is temporarily unavailable.", 500);

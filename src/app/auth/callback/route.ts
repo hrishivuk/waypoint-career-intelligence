@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { safeAuthRedirect } from "@/infrastructure/auth/auth-redirect";
 import { createSupabaseAuthServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { resolvePostAuthRedirect } from "@/infrastructure/auth/post-auth-redirect";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     const auth = await createSupabaseAuthServerClient();
     const { error } = await auth.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url));
+      return NextResponse.redirect(new URL(await resolvePostAuthRedirect(auth, next), request.url));
     }
   }
   return NextResponse.redirect(new URL("/login?error=callback", request.url));

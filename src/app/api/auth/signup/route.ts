@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { authCallbackUrl, safeAuthRedirect } from "@/infrastructure/auth/auth-redirect";
+import { authCallbackUrl } from "@/infrastructure/auth/auth-redirect";
 import { createSupabaseAuthServerClient } from "@/infrastructure/auth/supabase-auth-server";
+import { resolvePostAuthRedirect } from "@/infrastructure/auth/post-auth-redirect";
 import { authError, emailSchema, passwordSchema } from "../_shared";
 
 const schema = z.object({
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       confirmationRequired: !data.session,
-      redirectTo: data.session ? safeAuthRedirect(next) : undefined,
+      redirectTo: data.session ? await resolvePostAuthRedirect(auth, next) : undefined,
     });
   } catch (error) {
     console.error("Sign up failed", error);

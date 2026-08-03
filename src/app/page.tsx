@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { buttonStyles, PageContainer } from "@/components/ui";
 import { createSupabaseAuthServerClient, isSupabaseAuthConfigured } from "@/infrastructure/auth/supabase-auth-server";
@@ -13,6 +14,13 @@ export default async function Home() {
   if (!data.user) return <PublicLanding />;
 
   const { actor, client } = await requireAuthenticatedContext();
+  const onboarding = await client
+    .from("user_onboarding_state")
+    .select("completed_at")
+    .eq("user_id", actor.userId)
+    .maybeSingle();
+  if (onboarding.error) throw onboarding.error;
+  if (!onboarding.data?.completed_at) redirect("/onboarding");
   const [profile, projects, cvs, analyses] = await Promise.all([
     client.from("master_profile_records").select("id", { count: "exact", head: true }).eq("user_id", actor.userId).eq("status", "confirmed"),
     client.from("master_profile_records").select("id", { count: "exact", head: true }).eq("user_id", actor.userId).eq("status", "confirmed").eq("record_type", "project"),
