@@ -183,32 +183,6 @@ export async function POST(request: Request) {
       throw new Error("No source-supported profile records were extracted.");
     }
 
-    const { data: stagedImport, error: importError } = await client
-      .from("career_narrative_imports")
-      .insert(
-        {
-          user_id: actor.userId,
-          source_text: parsed.data.narrative,
-          source_hash: sourceHash,
-          status: "staged",
-          model_metadata: {
-            models: [...models],
-            responseIds,
-            promptVersions: [...promptVersions],
-            warnings,
-            coverage: {
-              sourceBlocks: blocks.length,
-              accountedBlocks: accountedBlockIds.size,
-              noClaimBlocks: blocks.length -
-                new Set(records.map((record) => record.blockId)).size,
-            },
-          },
-        },
-      )
-      .select("id,status,created_at,activated_at")
-      .single();
-    if (importError) throw importError;
-
     const unique = [
       ...new Map(
         records.map((record) => [
@@ -217,10 +191,7 @@ export async function POST(request: Request) {
         ]),
       ).values(),
     ];
-    const { data: candidates, error: candidateError } = await client
-      .from("career_narrative_candidates")
-      .insert(
-        unique.map((record, index) => {
+    const candidatePayload = unique.map((record, index) => {
           const exactExisting = existingByIdentity.get(
             `${record.recordType}:${normalizeKey(record.title)}`,
           );
@@ -240,8 +211,6 @@ export async function POST(request: Request) {
                 : "update_existing"
             : "new";
           return {
-          user_id: actor.userId,
-          import_id: stagedImport.id,
           record_type: record.recordType,
           title: record.title.trim(),
           statement: record.statement.trim(),
@@ -265,19 +234,58 @@ export async function POST(request: Request) {
           canonical_key: `${normalizeKey(record.recordType)}-${normalizeKey(record.title)}`,
           display_order: index,
           };
-        }),
-      )
-      .select(
-        "id,record_type,title,statement,structured_data,source_excerpt,confidence,decision,reconciliation,target_record_id,display_order",
+        });
+    const modelMetadata = {
+      models: [...models],
+      responseIds,
+      promptVersions: [...promptVersions],
+      warnings,
+      coverage: {
+        sourceBlocks: blocks.length,
+        accountedBlocks: accountedBlockIds.size,
+        noClaimBlocks:
+          blocks.length - new Set(records.map((record) => record.blockId)).size,
+      },
+    };
+    const { data: stagedImportId, error: stageError } = await client.rpc(
+      "stage_career_narrative_import_v1",
+      {
+        p_user_id: actor.userId,
+        p_source_text: parsed.data.narrative,
+        p_source_hash: sourceHash,
+        p_model_metadata: modelMetadata,
+        p_candidates: candidatePayload,
+      },
+    );
+    if (stageError?.code === "P0001") {
+      return Response.json(
+        {
+          error: {
+            message:
+              "This exact narrative has already been reviewed. Change or add new information before creating another review.",
+          },
+        },
+        { status: 409 },
       );
+    }
+    if (stageError || !stagedImportId) throw stageError ?? new Error("Narrative staging failed.");
+    const [{ data: stagedImport, error: importError }, { data: candidates, error: candidateError }] =
+      await Promise.all([
+        client
+          .from("career_narrative_imports")
+          .select("id,status,created_at,activated_at")
+          .eq("id", stagedImportId)
+          .single(),
+        client
+          .from("career_narrative_candidates")
+          .select(
+            "id,record_type,title,statement,structured_data,source_excerpt,confidence,decision,reconciliation,target_record_id,display_order",
+          )
+          .eq("import_id", stagedImportId)
+          .order("display_order"),
+      ]);
+    if (importError) throw importError;
     if (candidateError) throw candidateError;
-    const { error: supersedeError } = await client
-      .from("career_narrative_imports")
-      .update({ status: "superseded" })
-      .eq("user_id", actor.userId)
-      .eq("status", "staged")
-      .neq("id", stagedImport.id);
-    if (supersedeError) throw supersedeError;
     return Response.json(
       { currentImport: stagedImport, candidates },
       { status: 201 },

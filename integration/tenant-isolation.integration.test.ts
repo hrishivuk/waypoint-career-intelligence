@@ -348,6 +348,85 @@ describe("two-user RLS and Storage isolation", () => {
     expect(storedProfile.data).toEqual([{ source_candidate_id: acceptedId }]);
   });
 
+  it("atomically stages complete narrative reviews and preserves the prior review on failure", async () => {
+    const sourceText = `Atomic narrative staging ${"supported evidence ".repeat(8)}`;
+    const firstHash = "a".repeat(64);
+    const failedHash = "b".repeat(64);
+    const secondHash = "c".repeat(64);
+    const validCandidate = {
+      record_type: "skill",
+      title: "React",
+      statement: "Builds production interfaces with React.",
+      structured_data: { proficiency: "working" },
+      source_block_id: "atomic-stage-1",
+      source_excerpt: "Builds production interfaces with React.",
+      confidence: 0.9,
+      reconciliation: "new",
+      target_record_id: null,
+      canonical_key: `react-${runId.replaceAll("-", "")}`,
+      display_order: 0,
+    };
+
+    const foreignStage = await userB.client.rpc(
+      "stage_career_narrative_import_v1",
+      {
+        p_user_id: userA.applicationUserId,
+        p_source_text: sourceText,
+        p_source_hash: firstHash,
+        p_model_metadata: {},
+        p_candidates: [validCandidate],
+      },
+    );
+    expect(foreignStage.error?.code).toBe("P0002");
+
+    const firstStage = await userA.client.rpc("stage_career_narrative_import_v1", {
+      p_user_id: userA.applicationUserId,
+      p_source_text: sourceText,
+      p_source_hash: firstHash,
+      p_model_metadata: {},
+      p_candidates: [validCandidate],
+    });
+    expect(firstStage.error).toBeNull();
+    expect(firstStage.data).toBeTruthy();
+
+    const failedStage = await userA.client.rpc("stage_career_narrative_import_v1", {
+      p_user_id: userA.applicationUserId,
+      p_source_text: `${sourceText} failed candidate`,
+      p_source_hash: failedHash,
+      p_model_metadata: {},
+      p_candidates: [{ ...validCandidate, title: "", canonical_key: "invalid" }],
+    });
+    expect(failedStage.error).not.toBeNull();
+    const firstAfterFailure = await userA.client
+      .from("career_narrative_imports")
+      .select("status")
+      .eq("id", firstStage.data)
+      .single();
+    expect(firstAfterFailure.data?.status).toBe("staged");
+
+    const secondStage = await userA.client.rpc("stage_career_narrative_import_v1", {
+      p_user_id: userA.applicationUserId,
+      p_source_text: `${sourceText} second complete review`,
+      p_source_hash: secondHash,
+      p_model_metadata: {},
+      p_candidates: [{ ...validCandidate, canonical_key: `react-second-${runId.replaceAll("-", "")}` }],
+    });
+    expect(secondStage.error).toBeNull();
+    const [firstStored, secondCandidates] = await Promise.all([
+      userA.client
+        .from("career_narrative_imports")
+        .select("status")
+        .eq("id", firstStage.data)
+        .single(),
+      userA.client
+        .from("career_narrative_candidates")
+        .select("id")
+        .eq("import_id", secondStage.data),
+    ]);
+    expect(firstStored.data?.status).toBe("superseded");
+    expect(secondCandidates.data).toHaveLength(1);
+  });
+
   it("enforces and releases the configured per-user AI concurrency limit", async () => {
     const first = await admin.rpc("acquire_waypoint_ai_request_lease", {
       target_user_id: userA.applicationUserId,

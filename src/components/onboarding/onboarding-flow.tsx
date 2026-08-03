@@ -243,7 +243,7 @@ export function OnboardingFlow() {
                   onClick={() => void move("consent", "provider")}
                   className="mt-3"
                 >
-                  Continue without AI
+                  Set up a key later
                 </Button>
               </div>
             </StepPanel>

@@ -38,31 +38,17 @@ knowledge.
 - Existing unit, TypeScript, lint, production-build, and browser suites pass.
 - Public URLs remain unchanged after introducing the shared route-group layout.
 
-## Remaining findings
+## Additional release fixes
 
-### 1. Narrative staging is still a multi-query operation — medium
+- Narrative import creation, candidate insertion, and prior-review superseding
+  now run in one authenticated PostgreSQL transaction.
+- Legacy and narrative Career Profile records are merged by normalized identity,
+  with confirmed narrative records taking precedence and unmatched legacy
+  records preserved.
 
-Creating the import row, inserting candidates, and superseding an older staged
-review are separate database requests. The route now checks every error and
-never mutates an activated identical import, but a rare network/database failure
-between requests can leave a staged import without all expected candidates.
+## Remaining finding
 
-Recommended follow-up: move import creation, candidate insertion, and staged-run
-superseding into one authenticated PostgreSQL RPC, similar to the completed
-atomic review RPC.
-
-### 2. Mixed legacy and narrative knowledge visibility needs a product decision — medium
-
-Once at least one confirmed `master_profile_records` row exists, the Knowledge
-Library reads that source instead of merging the older typed knowledge tables.
-For accounts containing both systems, older confirmed records may stop appearing
-in the library even though they remain stored.
-
-Recommended follow-up: define one canonical migration/merge policy, then either
-migrate legacy records atomically or load and deduplicate both sources. Do not
-merge them heuristically without provenance rules.
-
-### 3. Route-level narrative tests remain limited — low
+### Route-level narrative tests remain limited — low
 
 The live database integration protects the highest-risk activation boundary,
 but GET/POST route branching is not yet covered by focused mocked route tests.

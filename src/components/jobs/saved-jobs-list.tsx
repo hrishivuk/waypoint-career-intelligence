@@ -29,7 +29,7 @@ export function SavedJobsList({ analyses }: { analyses: SavedJobAnalysisSummary[
     <section aria-labelledby="saved-jobs-title">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div><h2 id="saved-jobs-title" className="text-lg font-semibold text-foreground">Recent decisions</h2><p className="mt-1 text-sm text-muted-foreground">Newest completed analysis first.</p></div>
-        <span className="text-sm text-muted-foreground">{analyses.length} saved</span>
+        <span className="text-sm text-muted-foreground">Latest {analyses.length}</span>
       </div>
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-3">
         {analyses.map((analysis) => {

@@ -134,12 +134,6 @@ export async function loadKnowledgeLibrary(
       cause: masterProfileError,
     });
   }
-  if ((masterProfile ?? []).length > 0) {
-    return masterProfileSections(
-      masterProfile as Record<string, unknown>[],
-      sectionKeys,
-    );
-  }
   const selected = sectionKeys
     ? sectionKeys
         .map((key) => definitions.find((definition) => definition.key === key))
@@ -220,7 +214,37 @@ export async function loadKnowledgeLibrary(
       },
     }));
   }
-  return sections;
+  return mergeKnowledgeLibrarySections(
+    sections,
+    masterProfileSections(
+      (masterProfile ?? []) as Record<string, unknown>[],
+      sectionKeys,
+    ),
+  );
+}
+
+export function mergeKnowledgeLibrarySections(
+  legacySections: KnowledgeLibrarySection[],
+  masterSections: KnowledgeLibrarySection[],
+): KnowledgeLibrarySection[] {
+  const masterByKey = new Map(
+    masterSections.map((section) => [section.key, section]),
+  );
+  return legacySections.map((section) => {
+    const master = masterByKey.get(section.key);
+    if (!master?.items.length) return section;
+    const merged = new Map(
+      section.items.map((item) => [knowledgeItemIdentity(item), item]),
+    );
+    for (const item of master.items) {
+      merged.set(knowledgeItemIdentity(item), item);
+    }
+    return { ...section, items: [...merged.values()] };
+  });
+}
+
+function knowledgeItemIdentity(item: KnowledgeLibraryItem) {
+  return item.title.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }
 
 function masterProfileSections(

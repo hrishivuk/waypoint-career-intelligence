@@ -49,17 +49,17 @@ before merge and automatic deployment
 
 - `npm run typecheck`: passing.
 - `npm run lint`: passing.
-- `npm test`: 215 tests across 37 files passing.
+- `npm test`: 219 tests across 38 files passing.
 - `npm run test:e2e`: 5 Chromium public/auth/legal/health and protected-route
   tests passing.
 - `npm run build`: Next.js 16.2.12 production build passing on Node.js 22.
-- `npm run test:integration`: 4 live disposable-account tests passing against
+- `npm run test:integration`: 5 live disposable-account tests passing against
   the linked hosted Supabase project.
 - Live integration coverage verifies two-user database and Storage isolation,
-  atomic requirement synchronization, atomic narrative review and rollback,
-  and AI concurrency limits.
+  atomic requirement synchronization, atomic narrative staging and review with
+  rollback, and AI concurrency limits.
 - Hosted Supabase migrations are applied through
-  `202608030004_atomic_narrative_review.sql`.
+  `202608030005_atomic_narrative_staging.sql`.
 - Interactive Google signup has completed locally and returns to Waypoint’s
   onboarding flow.
 

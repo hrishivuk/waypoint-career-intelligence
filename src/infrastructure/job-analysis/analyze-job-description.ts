@@ -17,6 +17,7 @@ import {
 
 type Row = Record<string, unknown>;
 const ANALYSIS_ENGINE_VERSION = "waypoint-intelligence-v5-cv2";
+const MAX_JOB_DESCRIPTION_CHARACTERS = 50_000;
 
 export async function analyzeJobDescription(
   client: SupabaseClient,
@@ -27,6 +28,9 @@ export async function analyzeJobDescription(
   const cleaned = description.trim();
   if (cleaned.length < 80) {
     throw new Error("Paste a fuller job description before analysing it.");
+  }
+  if (cleaned.length > MAX_JOB_DESCRIPTION_CHARACTERS) {
+    throw new Error("The job description is too long to analyse safely.");
   }
 
   const knowledge = await loadKnowledge(client, userId);
@@ -507,11 +511,9 @@ async function loadKnowledge(client: SupabaseClient, userId: string) {
   const legacyModes = (modesResult.data ?? []) as Row[];
   const legacyPreferences = (preferencesResult.data ?? []) as Row[];
   const masterRecords = (masterProfileResult.data ?? []) as Row[];
-  const useMasterProfile = masterRecords.length > 0;
   const masterByType = (type: string) =>
     masterRecords.filter((record) => record.record_type === type);
-  const skills: Row[] = useMasterProfile
-    ? masterByType("skill").map((record) => ({
+  const masterSkills: Row[] = masterByType("skill").map((record) => ({
         id: record.id,
         name: record.title,
         aliases: stringArray(
@@ -520,40 +522,44 @@ async function loadKnowledge(client: SupabaseClient, userId: string) {
         description: record.statement,
         primary_category: "master_profile",
         updated_at: record.updated_at,
-      }))
-    : legacySkills;
-  const capabilityLevels = useMasterProfile
-    ? new Map(
-        masterByType("skill").map((record) => [
+      }));
+  const skills = mergeKnowledgeRows(
+    legacySkills,
+    masterSkills,
+    (row) => normalise(String(row.name)),
+  );
+  const capabilityLevels = new Map([
+        ...legacyCapabilityLevels,
+        ...masterByType("skill").map((record) => [
           String(record.id),
           String(
             (record.structured_data as Row | null)?.proficiency ?? "unknown",
           ),
-        ]),
-      )
-    : legacyCapabilityLevels;
-  const competencies: Row[] = useMasterProfile
-    ? masterByType("competency").map((record) => ({
+        ] as const),
+      ]);
+  const masterCompetencies: Row[] = masterByType("competency").map((record) => ({
         id: record.id,
         name: record.title,
         canonical_slug: normalise(String(record.title)),
         category: "master_profile",
         description: record.statement,
         updated_at: record.updated_at,
-      }))
-    : legacyCompetencies;
-  const competencyLevels = useMasterProfile
-    ? new Map(
-        masterByType("competency").map((record) => [
+      }));
+  const competencies = mergeKnowledgeRows(
+    legacyCompetencies,
+    masterCompetencies,
+    (row) => normalise(String(row.name)),
+  );
+  const competencyLevels = new Map([
+        ...legacyCompetencyLevels,
+        ...masterByType("competency").map((record) => [
           String(record.id),
           String(
             (record.structured_data as Row | null)?.proficiency ?? "working",
           ),
-        ]),
-      )
-    : legacyCompetencyLevels;
-  const evidence: Row[] = useMasterProfile
-    ? masterRecords
+        ] as const),
+      ]);
+  const masterEvidence: Row[] = masterRecords
         .filter((record) =>
           ["experience", "project", "education", "achievement", "stable_fact", "eligibility"].includes(
             String(record.record_type),
@@ -568,20 +574,26 @@ async function loadKnowledge(client: SupabaseClient, userId: string) {
           kind: record.record_type,
           attributes: record.structured_data,
           updated_at: record.updated_at,
-        }))
-    : legacyEvidence;
-  const modes: Row[] = useMasterProfile
-    ? masterByType("career_direction").map((record) => ({
+        }));
+  const evidence = mergeKnowledgeRows(
+    legacyEvidence,
+    masterEvidence,
+    (row) => `${normalise(String(row.kind))}:${normalise(String(row.title))}`,
+  );
+  const masterModes: Row[] = masterByType("career_direction").map((record) => ({
         id: record.id,
         name: record.title,
         purpose: record.statement,
         target_role_families:
           (record.structured_data as Row | null)?.tags ?? [],
         updated_at: record.updated_at,
-      }))
-    : legacyModes;
-  const preferences: Row[] = useMasterProfile
-    ? masterRecords
+      }));
+  const modes = mergeKnowledgeRows(
+    legacyModes,
+    masterModes,
+    (row) => normalise(String(row.name)),
+  );
+  const masterPreferences: Row[] = masterRecords
         .filter((record) =>
           ["preference", "eligibility", "decision_policy"].includes(
             String(record.record_type),
@@ -595,8 +607,12 @@ async function loadKnowledge(client: SupabaseClient, userId: string) {
             (record.structured_data as Row | null)?.strength ?? "preferred",
           reason: record.statement,
           updated_at: record.updated_at,
-        }))
-    : legacyPreferences;
+        }));
+  const preferences = mergeKnowledgeRows(
+    legacyPreferences,
+    masterPreferences,
+    (row) => normalise(String(row.subject)),
+  );
   const fingerprintRows = [
     ...masterRecords,
     ...skills,
@@ -629,20 +645,12 @@ async function loadKnowledge(client: SupabaseClient, userId: string) {
     capabilityLevels,
     competencies,
     competencyLevels,
-    competencyAssessments: useMasterProfile
-      ? []
-      : (competencyAssessmentsResult.data ?? []) as Row[],
+    competencyAssessments: (competencyAssessmentsResult.data ?? []) as Row[],
     modes,
     preferences,
-    skillRelationships: useMasterProfile
-      ? []
-      : (skillRelationshipsResult.data ?? []) as Row[],
-    skillEvidence: useMasterProfile
-      ? []
-      : (skillEvidenceResult.data ?? []) as Row[],
-    competencyEvidence: useMasterProfile
-      ? []
-      : (competencyEvidenceResult.data ?? []) as Row[],
+    skillRelationships: (skillRelationshipsResult.data ?? []) as Row[],
+    skillEvidence: (skillEvidenceResult.data ?? []) as Row[],
+    competencyEvidence: (competencyEvidenceResult.data ?? []) as Row[],
     fingerprint: createHash("sha256").update(fingerprintRows).digest("hex"),
     cvs: ((cvsResult.data ?? []) as Row[]).map((cv) => ({
       ...cv,
@@ -1955,6 +1963,16 @@ function normalise(value: string) {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\bfront end\b/g, "frontend")
     .trim();
+}
+
+export function mergeKnowledgeRows(
+  legacy: Row[],
+  master: Row[],
+  identity: (row: Row) => string,
+) {
+  const merged = new Map(legacy.map((row) => [identity(row), row]));
+  for (const row of master) merged.set(identity(row), row);
+  return [...merged.values()];
 }
 
 function containsPhrase(text: string, candidate: string) {

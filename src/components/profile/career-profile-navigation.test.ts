@@ -29,6 +29,7 @@ describe("Career Profile navigation", () => {
     ["/knowledge/insights/history", "insights"],
     ["/knowledge/review", "review"],
     ["/knowledge/review/pending", "review"],
+    ["/knowledge/skills/review", "review"],
     ["/knowledge/exceptions", "attention"],
     ["/knowledge/exceptions/example", "attention"],
     ["/profile", "add"],

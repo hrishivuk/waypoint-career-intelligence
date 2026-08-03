@@ -5,11 +5,33 @@ vi.mock("server-only", () => ({}));
 let assessRequirement: typeof import("./analyze-job-description").assessRequirement;
 let applySemanticMatch: typeof import("./analyze-job-description").applySemanticMatch;
 let selectBestCv: typeof import("./analyze-job-description").selectBestCv;
+let mergeKnowledgeRows: typeof import("./analyze-job-description").mergeKnowledgeRows;
 
 beforeAll(async () => {
-  ({ assessRequirement, applySemanticMatch, selectBestCv } = await import(
+  ({ assessRequirement, applySemanticMatch, selectBestCv, mergeKnowledgeRows } = await import(
     "./analyze-job-description"
   ));
+});
+
+describe("mixed legacy and narrative knowledge", () => {
+  it("keeps legacy knowledge while master records replace matching identities", () => {
+    const result = mergeKnowledgeRows(
+      [
+        { id: "legacy-react", name: "React" },
+        { id: "legacy-typescript", name: "TypeScript" },
+      ],
+      [
+        { id: "master-react", name: "React" },
+        { id: "master-figma", name: "Figma" },
+      ],
+      (row) => String(row.name).toLowerCase(),
+    );
+    expect(result.map(({ id }) => id)).toEqual([
+      "master-react",
+      "legacy-typescript",
+      "master-figma",
+    ]);
+  });
 });
 
 function requirement(text: string) {

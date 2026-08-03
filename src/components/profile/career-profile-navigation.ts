@@ -46,6 +46,12 @@ export const careerProfileNavigation = [
 export function getActiveCareerProfileItem(pathname: string) {
   const normalizedPathname = normalizePathname(pathname);
 
+  // The legacy skill-review workflow is part of the unified review queue even
+  // though its URL predates the current Career Profile navigation.
+  if (matchesRoute(normalizedPathname, "/knowledge/skills/review")) {
+    return careerProfileNavigation.find(({ id }) => id === "review") ?? null;
+  }
+
   return (
     [...careerProfileNavigation]
       .sort((left, right) => right.href.length - left.href.length)

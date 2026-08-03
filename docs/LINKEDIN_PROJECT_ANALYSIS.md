@@ -201,7 +201,7 @@ The final pre-publish run must update this table with its date and commit SHA.
 | Playwright browser smoke | 5 Chromium tests passing | Landing, Google account entry, auth/legal pages, protected-route redirects, and safe health response. |
 | Production build | Passing | Next.js compiles and enumerates the intended routes. |
 | npm audit | 0 known vulnerabilities at last audit | Registry advisories at that point in time. |
-| Two-user Supabase integration | 4 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation, atomic analysis and narrative-review updates, rollback safety, and AI concurrency in the linked Supabase project. |
+| Two-user Supabase integration | 5 live tests passed on 3 August 2026; cleanup verified | Real JWT database/Storage isolation, atomic analysis and narrative staging/review updates, rollback safety, and AI concurrency in the linked Supabase project. |
 | Google OAuth local flow | Interactive Google signup completed through the hosted provider and returned to Waypoint onboarding on 3 August 2026 | Local client/provider/callback flow is configured; production origins and redirects still require deployed validation. |
 | Email/BYOK live flow | Pending | Requires inbox confirmation and low-value provider test keys. |
 
