@@ -48,7 +48,7 @@ export async function PATCH(
       .select("id,metadata")
       .eq("user_id", actor.userId)
       .eq("job_id", analysis.job_id)
-      .order("created_at");
+      .order("position");
     if (requirementsError || !requirements?.[index]) {
       return Response.json(
         { error: { message: "Requirement was not found." } },

@@ -80,7 +80,11 @@ export async function analyzeJobDescription(
       ? applySemanticMatch(requirement, deterministic, semantic, knowledge)
       : deterministic;
     const override = storedParsed?.criticalities[index];
-    return override ? { ...assessed, criticality: override } : assessed;
+    return {
+      ...assessed,
+      ...(override ? { criticality: override } : {}),
+      position: index,
+    };
   });
   const requirementsScore = weightedAverage(requirements);
   const direction = assessDirection(parsedJob, knowledge.modes);
@@ -225,10 +229,10 @@ async function findStoredParsedJob(
     await Promise.all([
       client
         .from("job_requirements")
-        .select("kind,requirement_text,is_required,confidence,source_start,source_end,metadata,criticality")
+        .select("kind,requirement_text,is_required,confidence,source_start,source_end,metadata,criticality,position")
         .eq("user_id", userId)
         .eq("job_id", String(job.id))
-        .order("created_at"),
+        .order("position"),
       client
         .from("analyses")
         .select("result")
@@ -1826,6 +1830,7 @@ async function persistAnalysis(client: SupabaseClient, input: {
     id: randomUUID(),
     user_id: input.userId,
     job_id: jobId,
+    position: index,
     kind: databaseRequirementKind(requirement.kind),
     requirement_text: requirement.text,
     is_required: requirement.priority === "required",
@@ -1857,6 +1862,7 @@ async function persistAnalysis(client: SupabaseClient, input: {
     gaps: input.gaps,
     uncertainties: input.uncertainties,
     requirements: input.requirements.map((requirement) => ({
+      position: requirement.position,
       text: requirement.text,
       kind: requirement.kind,
       required: requirement.required,

@@ -38,4 +38,12 @@ describe("public multi-user schema contract", () => {
     expect(sql).toContain("expires_at <= timezone('utc', now())");
     expect(sql).toContain("revoke all on table public.ai_request_leases from anon, authenticated");
   });
+
+  it("persists a stable, owner-scoped source order for job requirements", () => {
+    const sql = read("202608030002_stable_job_requirement_order.sql");
+    expect(sql).toContain("partition by user_id, job_id");
+    expect(sql).toContain("order by created_at, id");
+    expect(sql).toContain("alter column position set not null");
+    expect(sql).toContain("unique (user_id, job_id, position)");
+  });
 });

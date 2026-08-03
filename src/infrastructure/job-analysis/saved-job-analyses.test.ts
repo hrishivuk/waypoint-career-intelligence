@@ -82,6 +82,18 @@ describe("saved job analysis reads", () => {
           analysisEngineVersion: "waypoint-intelligence-v5-cv2",
           strengths: ["Relevant evidence"],
           scores: { requirements: 74 },
+          requirements: [
+            {
+              position: 2,
+              text: "Lead cross-functional delivery",
+              kind: "experience",
+              required: true,
+              match: "matched",
+              score: 90,
+              explanation: "Supported by confirmed evidence.",
+              evidence: ["Programme leadership"],
+            },
+          ],
         },
       },
       error: null,
@@ -96,6 +108,7 @@ describe("saved job analysis reads", () => {
       requirementsScore: 74,
       strengths: ["Relevant evidence"],
     })
+    expect(result?.analysis.requirements[0]?.position).toBe(2)
     expect(result?.resultCompatibility).toBe("current")
     expect(calls).toContainEqual(["id", "analysis-1"])
     expect(calls).toContainEqual(["user_id", "user-1"])

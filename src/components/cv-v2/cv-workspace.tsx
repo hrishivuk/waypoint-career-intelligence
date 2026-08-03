@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  Eye,
+  EyeOff,
+  FileText,
+  Library,
+  Trash2,
+  UploadCloud,
+} from "lucide-react";
 
 import type { CvSnapshot } from "@/domain/cv/cv-document";
-import { buttonStyles } from "@/components/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function formatBytes(bytes: number) {
   return bytes < 1024 * 1024
@@ -78,81 +93,130 @@ export function CvWorkspace() {
   return (
     <div className="space-y-8">
       <form
-        className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+        aria-labelledby="cv-upload-heading"
+        aria-busy={working}
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
         action={(data) => void upload(data)}
       >
-        <div className="grid gap-5 md:grid-cols-2">
-          <label className="text-sm font-medium text-slate-800">
+        <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_17rem]">
+          <div>
+            <span className="flex size-10 items-center justify-center rounded-lg bg-[var(--primary-muted)] text-[var(--primary-muted-foreground)]">
+              <UploadCloud aria-hidden="true" className="size-5" />
+            </span>
+            <h2 id="cv-upload-heading" className="mt-4 text-xl font-semibold tracking-[var(--tracking-tight)] text-foreground">
+              Add a role-specific CV
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Keep each CV as a separate application document. Waypoint reads
+              only the content visible in the uploaded file and does not change
+              your Master Profile.
+            </p>
+          </div>
+          <aside className="rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-sunken)] p-4">
+            <p className="text-sm font-semibold text-foreground">Before you upload</p>
+            <ul className="mt-3 space-y-2 text-sm leading-5 text-muted-foreground">
+              <li>Use PDF or DOCX, up to 10 MB</li>
+              <li>Name the role or purpose clearly</li>
+              <li>Parsing is deterministic and does not use AI</li>
+            </ul>
+          </aside>
+        </div>
+        <div className="grid gap-5 border-t border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 sm:p-7 md:grid-cols-2">
+          <label className="text-sm font-semibold text-foreground">
             CV file
             <input
-              className="mt-2 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm"
+              className="mt-2 block min-h-11 w-full cursor-pointer rounded-lg border border-input bg-[var(--surface-overlay)] text-sm text-foreground shadow-xs file:mr-3 file:min-h-11 file:cursor-pointer file:border-0 file:border-r file:border-[var(--border-subtle)] file:bg-[var(--surface-sunken)] file:px-3 file:text-sm file:font-medium file:text-foreground"
               name="file"
               type="file"
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               required
             />
           </label>
-          <label className="text-sm font-medium text-slate-800">
+          <label className="text-sm font-semibold text-foreground">
             CV name
             <input
-              className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2 text-sm text-foreground shadow-xs outline-none placeholder:text-[var(--text-tertiary)]"
               name="displayName"
               placeholder="e.g. Frontend Engineer CV"
               maxLength={120}
             />
           </label>
-          <label className="text-sm font-medium text-slate-800">
+          <label className="text-sm font-semibold text-foreground">
             Intended roles
             <input
-              className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2 text-sm text-foreground shadow-xs outline-none placeholder:text-[var(--text-tertiary)]"
               name="intendedRoles"
               placeholder="Frontend Engineer, UI Engineer"
             />
           </label>
-          <label className="text-sm font-medium text-slate-800">
+          <label className="text-sm font-semibold text-foreground">
             Private note
             <input
-              className="mt-2 block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              className="mt-2 block min-h-11 w-full rounded-lg border border-input bg-[var(--surface-overlay)] px-3 py-2 text-sm text-foreground shadow-xs outline-none placeholder:text-[var(--text-tertiary)]"
               name="notes"
               placeholder="When this version should be used"
               maxLength={2000}
             />
           </label>
-        </div>
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs leading-5 text-slate-500">
-            PDF or DOCX, up to 10 MB. Parsing is deterministic and does not use AI.
-          </p>
-          <button className={buttonStyles.primary} disabled={working}>
+          <div className="flex flex-col gap-3 md:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs leading-5 text-muted-foreground">
+              Files stay private to your account. You can permanently remove them at any time.
+            </p>
+          <Button type="submit" className="w-full shrink-0 sm:w-auto" disabled={working}>
+            <UploadCloud aria-hidden="true" data-icon="inline-start" />
             {working ? "Processing…" : "Upload and parse CV"}
-          </button>
+          </Button>
+          </div>
         </div>
       </form>
 
       {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
-        </div>
+        <Alert
+          variant="destructive"
+          className="border-[var(--danger-border)] bg-[var(--danger-background)] text-[var(--danger)]"
+        >
+          <AlertCircle aria-hidden="true" />
+          <AlertTitle>CV workspace needs your attention</AlertTitle>
+          <AlertDescription className="text-[var(--danger)]">{error}</AlertDescription>
+        </Alert>
       ) : null}
 
-      <section>
-        <div className="mb-4 flex items-end justify-between">
+      <section aria-labelledby="cv-library-heading" aria-busy={loading || working}>
+        <div className="mb-5 flex items-end justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-slate-950">CV library</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-[var(--tracking-label)] text-primary">Documents</p>
+            <h2 id="cv-library-heading" className="mt-2 flex items-center gap-2 text-xl font-semibold tracking-[var(--tracking-tight)] text-foreground">
+              <Library aria-hidden="true" className="size-5 text-primary" />
+              CV library
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               {cvs.length} separate application {cvs.length === 1 ? "document" : "documents"}
             </p>
           </div>
         </div>
         {loading ? (
-          <p className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-500">
-            Loading CV library…
-          </p>
+          <div role="status" aria-label="Loading CV library" className="space-y-4">
+            {[0, 1].map((item) => (
+              <div key={item} className="rounded-xl border border-border bg-card p-5">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="size-10 shrink-0" />
+                  <div className="flex-1">
+                    <Skeleton className="h-5 w-52 max-w-full" />
+                    <Skeleton className="mt-3 h-4 w-72 max-w-full" />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <span className="sr-only">Loading CV library…</span>
+          </div>
         ) : cvs.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-            <h3 className="font-semibold text-slate-950">No CVs stored yet</h3>
-            <p className="mt-2 text-sm text-slate-600">
-              Upload your first role-specific CV above.
+          <div className="rounded-xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-raised)] px-5 py-10 text-center">
+            <span className="mx-auto flex size-11 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary-muted-foreground)]">
+              <FileText aria-hidden="true" className="size-5" />
+            </span>
+            <h3 className="mt-4 font-semibold text-foreground">No CVs stored yet</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+              Upload your first role-specific CV above. Parsed content and readiness will appear here.
             </p>
           </div>
         ) : (
@@ -161,80 +225,79 @@ export function CvWorkspace() {
               const open = openId === cv.id;
               const skills = cv.claims.filter((claim) => claim.claimType === "skill");
               return (
-                <article key={cv.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <article key={cv.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
                   <div className="p-5 sm:p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-sunken)] text-primary">
+                          <FileText aria-hidden="true" className="size-5" />
+                        </span>
+                        <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-lg font-semibold text-slate-950">{cv.displayName}</h3>
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                            cv.processingStatus === "ready"
-                              ? "bg-emerald-50 text-emerald-700"
-                              : cv.processingStatus === "failed"
-                                ? "bg-red-50 text-red-700"
-                                : "bg-amber-50 text-amber-700"
-                          }`}>
+                          <h3 className="text-lg font-semibold text-foreground">{cv.displayName}</h3>
+                          <Badge variant="outline" className={statusClass(cv.processingStatus)}>
+                            {cv.processingStatus === "ready" ? <CheckCircle2 aria-hidden="true" /> : cv.processingStatus === "failed" ? <AlertCircle aria-hidden="true" /> : <Clock3 aria-hidden="true" />}
                             {cv.processingStatus === "ready" ? "ATS parsed" : cv.processingStatus}
-                          </span>
+                          </Badge>
                         </div>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="mt-1 break-words text-sm text-muted-foreground">
                           {cv.originalFilename} · {formatBytes(cv.byteSize)}
                           {cv.pageCount ? ` · ${cv.pageCount} pages` : ""}
                         </p>
                         {cv.intendedRoles.length ? (
-                          <p className="mt-3 text-sm text-slate-700">
+                          <p className="mt-3 text-sm text-foreground">
                             <span className="font-medium">Best intended for:</span>{" "}
                             {cv.intendedRoles.join(", ")}
                           </p>
                         ) : null}
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button
-                          className={buttonStyles.secondary}
+                      <div className="grid shrink-0 gap-2 sm:flex">
+                        <Button
+                          variant="outline"
                           onClick={() => setOpenId(open ? null : cv.id)}
                           type="button"
                         >
+                          {open ? <EyeOff aria-hidden="true" data-icon="inline-start" /> : <Eye aria-hidden="true" data-icon="inline-start" />}
                           {open ? "Hide content" : "View CV content"}
-                        </button>
-                        <button
-                          className="rounded-lg border border-red-200 px-3 py-2.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                        </Button>
+                        <Button
+                          variant="destructive"
                           disabled={working}
                           onClick={() => void remove(cv)}
                           type="button"
                         >
+                          <Trash2 aria-hidden="true" data-icon="inline-start" />
                           Delete
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     {cv.processingError ? (
-                      <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-                        {cv.processingError}
-                      </p>
+                      <Alert
+                        variant="destructive"
+                        className="mt-4 border-[var(--danger-border)] bg-[var(--danger-background)] text-[var(--danger)]"
+                      >
+                        <AlertCircle aria-hidden="true" />
+                        <AlertTitle>Parsing failed</AlertTitle>
+                        <AlertDescription className="text-[var(--danger)]">{cv.processingError}</AlertDescription>
+                      </Alert>
                     ) : null}
                   </div>
                   {open ? (
-                    <div className="border-t border-slate-200 bg-slate-50 p-5 sm:p-6">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="rounded-xl bg-white p-4">
-                          <p className="text-xs uppercase tracking-wide text-slate-500">Sections found</p>
-                          <p className="mt-1 text-2xl font-semibold text-slate-950">{cv.sections.length}</p>
-                        </div>
-                        <div className="rounded-xl bg-white p-4">
-                          <p className="text-xs uppercase tracking-wide text-slate-500">Visible skills</p>
-                          <p className="mt-1 text-2xl font-semibold text-slate-950">{skills.length}</p>
-                        </div>
-                        <div className="rounded-xl bg-white p-4">
-                          <p className="text-xs uppercase tracking-wide text-slate-500">Content items</p>
-                          <p className="mt-1 text-2xl font-semibold text-slate-950">{cv.claims.length}</p>
-                        </div>
+                    <div className="border-t border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 sm:p-6">
+                      <div className="grid overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-card sm:grid-cols-3 sm:divide-x sm:divide-[var(--border-subtle)]">
+                        <Metric label="Sections found" value={cv.sections.length} />
+                        <Metric label="Visible skills" value={skills.length} />
+                        <Metric label="Content items" value={cv.claims.length} />
                       </div>
                       <div className="mt-5 space-y-3">
                         {cv.sections.map((section) => (
-                          <details key={section.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                            <summary className="cursor-pointer font-medium capitalize text-slate-900">
-                              {section.heading ?? section.sectionType}
+                          <details key={section.id} className="group overflow-hidden rounded-lg border border-border bg-card">
+                            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 font-medium capitalize text-foreground marker:content-none">
+                              <span>{section.heading ?? section.sectionType}</span>
+                              <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
                             </summary>
-                            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                            <p className="whitespace-pre-wrap border-t border-[var(--border-subtle)] px-4 py-4 text-sm leading-6 text-muted-foreground">
                               {section.content}
                             </p>
                           </details>
@@ -250,4 +313,27 @@ export function CvWorkspace() {
       </section>
     </div>
   );
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border-b border-[var(--border-subtle)] p-4 last:border-b-0 sm:border-b-0">
+      <p className="text-xs font-semibold uppercase tracking-[var(--tracking-label)] text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-2xl font-semibold tabular-nums text-foreground">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function statusClass(status: CvSnapshot["processingStatus"]) {
+  if (status === "ready") {
+    return "border-[var(--success-border)] bg-[var(--success-background)] text-[var(--success)]";
+  }
+  if (status === "failed") {
+    return "border-[var(--danger-border)] bg-[var(--danger-background)] text-[var(--danger)]";
+  }
+  return "border-[var(--warning-border)] bg-[var(--warning-background)] text-[var(--warning)]";
 }

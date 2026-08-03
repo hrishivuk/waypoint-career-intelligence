@@ -1,4 +1,6 @@
 export interface JobRequirementResult {
+  /** Zero-based source order within the parsed job description. */
+  position?: number;
   text: string;
   kind: string;
   required: boolean;

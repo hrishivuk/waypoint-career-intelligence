@@ -22,6 +22,7 @@ const semanticStatusSchema = z.enum([
   "deterministic_only",
 ])
 const requirementSchema = z.object({
+  position: z.number().int().min(0).optional().catch(undefined),
   text: z.string().min(1),
   kind: z.string().catch("other"),
   required: z.boolean().catch(false),
