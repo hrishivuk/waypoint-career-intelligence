@@ -217,9 +217,14 @@ function SectionItems({ section }: { section: KnowledgeLibrarySection }) {
                 {items.length} skills
               </span>
             </div>
-            <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+            <div className="grid items-stretch gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,21rem),1fr))]">
               {items.map((item) => (
-                <KnowledgeCard key={item.id} sectionKey="skills" item={item} />
+                <KnowledgeCard
+                  key={item.id}
+                  sectionKey="skills"
+                  item={item}
+                  display="card"
+                />
               ))}
             </div>
           </div>
@@ -232,17 +237,26 @@ function SectionItems({ section }: { section: KnowledgeLibrarySection }) {
 function KnowledgeCard({
   sectionKey,
   item,
+  display = "row",
 }: {
   sectionKey: string;
   item: KnowledgeLibraryItem;
+  display?: "row" | "card";
 }) {
   const [editing, setEditing] = useState(false);
+  const isCard = display === "card";
   const category = ["skills", "competencies"].includes(sectionKey)
     ? knowledgeCategory(item)
     : null;
   if (editing) {
     return (
-      <div className="bg-[var(--surface-raised)] p-4 sm:p-5">
+      <div
+        className={
+          isCard
+            ? "h-full overflow-hidden rounded-xl border border-border bg-[var(--surface-raised)] p-4 sm:p-5"
+            : "bg-[var(--surface-raised)] p-4 sm:p-5"
+        }
+      >
         <KnowledgeEditor
           sectionKey={sectionKey}
           item={item}
@@ -252,8 +266,14 @@ function KnowledgeCard({
     );
   }
   return (
-    <article className="px-4 py-4 transition-colors hover:bg-[var(--surface-raised)] sm:px-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+    <article
+      className={
+        isCard
+          ? "flex h-full flex-col rounded-xl border border-border bg-card px-4 py-4 transition-colors hover:bg-[var(--surface-raised)] sm:px-5"
+          : "px-4 py-4 transition-colors hover:bg-[var(--surface-raised)] sm:px-5"
+      }
+    >
+      <div className={`flex flex-wrap items-start justify-between gap-4 ${isCard ? "flex-1" : ""}`}>
         <div className="min-w-0 flex-1">
           <h3 className="font-heading font-medium leading-6 text-foreground">
             {item.title}

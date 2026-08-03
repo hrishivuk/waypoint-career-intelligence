@@ -188,18 +188,25 @@ export function ApplicationKit() {
             </Badge>
           </div>
 
-          <div className="divide-y divide-[var(--border-subtle)]">
+          <div className="grid gap-4 bg-[var(--surface-raised)] p-4 md:grid-cols-2 sm:p-5 2xl:grid-cols-3">
             {section.items.map((item) => (
               editingItem === item.id ? (
-                <ItemEditor
+                <div
                   key={item.id}
-                  label={item.label}
-                  value={item.value}
-                  onCancel={() => setEditingItem(null)}
-                  onSave={(label, value) => saveItem(item.id, label, value)}
-                />
+                  className="overflow-hidden rounded-xl border border-primary md:col-span-2 2xl:col-span-3"
+                >
+                  <ItemEditor
+                    label={item.label}
+                    value={item.value}
+                    onCancel={() => setEditingItem(null)}
+                    onSave={(label, value) => saveItem(item.id, label, value)}
+                  />
+                </div>
               ) : (
-                <article key={item.id} className="grid gap-4 p-5 transition-colors hover:bg-[var(--surface-raised)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-6">
+                <article
+                  key={item.id}
+                  className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 shadow-xs transition-[border-color,box-shadow,transform] hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-sm"
+                >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold text-foreground">{item.label}</h3>
@@ -213,7 +220,7 @@ export function ApplicationKit() {
                       {item.value || "Not added yet"}
                     </p>
                   </div>
-                  <div className="grid gap-2 sm:flex sm:items-center sm:justify-end">
+                  <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2">
                     <Button
                       type="button"
                       variant="outline"
