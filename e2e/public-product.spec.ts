@@ -15,6 +15,15 @@ test("public account and legal routes are reachable", async ({ page }) => {
   }
 });
 
+test("Google account entry is available from sign-in and signup", async ({ page }) => {
+  for (const route of ["/login", "/signup"]) {
+    await page.goto(route);
+    const google = page.getByRole("link", { name: "Continue with Google" });
+    await expect(google).toBeVisible();
+    await expect(google).toHaveAttribute("href", /\/auth\/google\?next=/);
+  }
+});
+
 test("health endpoint exposes status but no secret values", async ({ request }) => {
   const response = await request.get("/api/health");
   expect(response.ok()).toBeTruthy();

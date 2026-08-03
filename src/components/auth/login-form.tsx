@@ -41,9 +41,7 @@ export function LoginForm() {
   return (
     <AuthCard eyebrow="Welcome back" title="Sign in to Waypoint" description="Continue building your career profile and application materials.">
       {searchParams.get("password") === "updated" ? <Notice>Your password has been updated. You can sign in now.</Notice> : null}
-      <a href={`/auth/google?next=${encodeURIComponent(next)}`} className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50">
-        Continue with Google
-      </a>
+      <GoogleAuthLink next={next} />
       <Divider />
       <form className="space-y-4" onSubmit={submit}>
         <EmailField value={email} onChange={setEmail} />
@@ -68,4 +66,7 @@ export function EmailField({ value, onChange }: { value: string; onChange: (valu
 export function ErrorNotice({ children }: { children: React.ReactNode }) { return <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{children}</p>; }
 export function Notice({ children }: { children: React.ReactNode }) { return <p role="status" className="mt-5 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">{children}</p>; }
 export function SubmitButton({ busy, busyText, children }: { busy: boolean; busyText: string; children: React.ReactNode }) { return <button disabled={busy} className="min-h-11 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50">{busy ? busyText : children}</button>; }
-function Divider() { return <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>; }
+export function GoogleAuthLink({ next }: { next: string }) {
+  return <a href={`/auth/google?next=${encodeURIComponent(next)}`} className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50">Continue with Google</a>;
+}
+export function Divider() { return <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>; }
