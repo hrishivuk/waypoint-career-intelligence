@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, FileText, Sparkles, UserRound } from "lucide-react";
 
+import { decideHomeReadiness } from "@/application/home/readiness";
 import { buttonStyles, PageContainer } from "@/components/ui";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { createSupabaseAuthServerClient, isSupabaseAuthConfigured } from "@/infrastructure/auth/supabase-auth-server";
 import { requireAuthenticatedContext } from "@/infrastructure/auth/supabase-identity";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +20,72 @@ export default async function Home() {
   const { actor, client } = await requireAuthenticatedContext();
   const onboarding = await client
     .from("user_onboarding_state")
-    .select("completed_at")
+    .select("completed_at, preferred_ai_provider")
     .eq("user_id", actor.userId)
     .maybeSingle();
   if (onboarding.error) throw onboarding.error;
   if (!onboarding.data?.completed_at) redirect("/onboarding");
-  const [profile, projects, cvs, analyses] = await Promise.all([
+  const [profile, cvs, analyses] = await Promise.all([
     client.from("master_profile_records").select("id", { count: "exact", head: true }).eq("user_id", actor.userId).eq("status", "confirmed"),
-    client.from("master_profile_records").select("id", { count: "exact", head: true }).eq("user_id", actor.userId).eq("status", "confirmed").eq("record_type", "project"),
     client.from("cv_documents_v2").select("id", { count: "exact", head: true }).eq("user_id", actor.userId),
     client.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", actor.userId).eq("status", "completed"),
   ]);
-  const metrics = [
-    { label: "Master Profile records", value: profile.count ?? 0 }, { label: "Projects", value: projects.count ?? 0 },
-    { label: "CV documents", value: cvs.count ?? 0 }, { label: "Job analyses", value: analyses.count ?? 0 },
+  const connectedProvider = onboarding.data.preferred_ai_provider === "openai" || onboarding.data.preferred_ai_provider === "groq"
+    ? onboarding.data.preferred_ai_provider
+    : null;
+  const snapshot = {
+    connectedProvider,
+    confirmedProfileCount: profile.count ?? 0,
+    cvDocumentCount: cvs.count ?? 0,
+  };
+  const nextAction = decideHomeReadiness(snapshot);
+  const readiness = [
+    { label: "Career Profile", value: snapshot.confirmedProfileCount, ready: snapshot.confirmedProfileCount > 0, href: "/profile", icon: UserRound, unit: "confirmed records" },
+    { label: "CV library", value: snapshot.cvDocumentCount, ready: snapshot.cvDocumentCount > 0, href: "/cvs", icon: FileText, unit: "documents" },
+    { label: "AI provider", value: connectedProvider ? 1 : 0, ready: Boolean(connectedProvider), href: "/settings", icon: Sparkles, unit: connectedProvider ?? "not connected" },
   ];
+
   return <PageContainer>
-    <section className="grid gap-10 border-b border-slate-200 pb-10 pt-4 lg:grid-cols-[1.2fr_0.8fr] lg:items-end"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-600">Evidence before advice</p><h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 sm:text-5xl">Career decisions grounded in what you have actually done.</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">Build your evidence base, compare it with a role, and turn the result into a stronger application.</p><div className="mt-7 flex flex-wrap gap-3"><Link href="/jobs/new" className={buttonStyles.primary}>Analyse a job</Link><Link href="/profile" className={buttonStyles.secondary}>Add career evidence</Link></div></div><HowItWorks /></section>
-    <section className="py-10"><p className="text-sm font-semibold text-slate-950">Your workspace</p><p className="mt-1 text-sm text-slate-600">A snapshot of your confirmed, private information.</p><div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{metrics.map((metric) => <div key={metric.label} className="rounded-xl border border-slate-200 bg-white p-5"><p className="text-3xl font-semibold tracking-tight text-slate-950">{metric.value}</p><p className="mt-1 text-sm text-slate-500">{metric.label}</p></div>)}</div></section>
+    <header className="flex flex-col gap-6 border-b border-[var(--border-subtle)] pb-8 sm:pb-10 lg:flex-row lg:items-end lg:justify-between">
+      <div className="max-w-[var(--reading-max)]">
+        <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-primary">Your workspace</p>
+        <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-[var(--tracking-tight)] text-foreground sm:text-4xl">Make the next career decision from evidence.</h1>
+        <p className="mt-4 text-base leading-7 text-muted-foreground">Waypoint keeps your reviewed career history, CVs and job decisions connected in one private workspace.</p>
+      </div>
+      <Link href="/jobs/new" className={buttonVariants({ size: "lg" })}>Analyse a job<ArrowRight aria-hidden="true" /></Link>
+    </header>
+
+    <section aria-labelledby="next-step-title" className="mt-8 rounded-2xl border border-[var(--border-default)] bg-[var(--surface-raised)] p-5 shadow-sm sm:p-7">
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[var(--tracking-caps)] text-primary">Next best step</p>
+          <h2 id="next-step-title" className="mt-2 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{nextAction.label}</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{nextAction.description}</p>
+        </div>
+        <Link href={nextAction.href} className={cn(buttonVariants({ size: "default" }), "md:min-w-48")}>{nextAction.label}<ArrowRight aria-hidden="true" /></Link>
+      </div>
+    </section>
+
+    <section aria-labelledby="readiness-title" className="py-9">
+      <div className="flex items-end justify-between gap-4">
+        <div><h2 id="readiness-title" className="text-lg font-semibold text-foreground">Workspace readiness</h2><p className="mt-1 text-sm text-muted-foreground">The information available for your next analysis.</p></div>
+        <span className="hidden text-sm text-muted-foreground sm:inline">Private to your account</span>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {readiness.map((item) => <Link key={item.label} href={item.href} className="group rounded-xl border border-[var(--border-subtle)] bg-card p-5 transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)]">
+          <div className="flex items-center justify-between gap-4"><span className="flex size-10 items-center justify-center rounded-lg bg-[var(--surface-sunken)] text-foreground"><item.icon className="size-5" aria-hidden="true" /></span>{item.ready ? <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--success)]"><CheckCircle2 className="size-4" aria-hidden="true" />Ready</span> : <span className="text-xs font-semibold text-[var(--warning)]">Needs attention</span>}</div>
+          <h3 className="mt-5 font-semibold text-foreground group-hover:text-primary">{item.label}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{item.value > 0 ? `${item.value} ${item.unit}` : item.unit}</p>
+        </Link>)}
+      </div>
+    </section>
+
+    <section aria-labelledby="activity-title" className="border-t border-[var(--border-subtle)] pt-8">
+      <div className="rounded-xl bg-[var(--surface-sunken)] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+        <div className="flex items-start gap-4"><span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[var(--surface-raised)] text-primary"><BriefcaseBusiness className="size-5" aria-hidden="true" /></span><div><h2 id="activity-title" className="font-semibold text-foreground">Job analysis activity</h2><p className="mt-1 text-sm text-muted-foreground">{analyses.count ? `${analyses.count} completed ${analyses.count === 1 ? "analysis" : "analyses"} in your workspace.` : "No jobs analysed yet. Your first result will appear here."}</p></div></div>
+        <Link href="/jobs" className="mt-4 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary hover:text-[var(--primary-hover)] sm:mt-0">{analyses.count ? "View jobs" : "Analyse your first job"}<ArrowRight className="size-4" aria-hidden="true" /></Link>
+      </div>
+    </section>
   </PageContainer>;
 }
 
@@ -53,5 +105,3 @@ function PublicLanding() {
     <footer className="border-t border-slate-200 px-4 py-6 text-center text-xs text-slate-500">Waypoint · Always verify application content before submitting. · <Link href="/privacy" className="hover:text-indigo-700">Privacy</Link> · <Link href="/terms" className="hover:text-indigo-700">Terms</Link></footer>
   </main>;
 }
-
-function HowItWorks() { return <aside className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"><p className="text-sm font-semibold text-slate-950">Your next steps</p><ol className="mt-5 space-y-4">{["Build and confirm your Master Profile.", "Add your existing role-specific CVs.", "Analyse a role, choose a CV, and prepare the application."].map((step, index) => <li key={step} className="flex gap-3 text-sm leading-6 text-slate-600"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-semibold text-indigo-700">{index + 1}</span>{step}</li>)}</ol></aside>; }

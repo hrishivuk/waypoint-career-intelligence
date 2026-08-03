@@ -70,8 +70,15 @@ export async function DELETE(request: Request) {
     if (!parsed.success) {
       return Response.json({ error: "Choose a supported provider." }, { status: 400, headers: noStore });
     }
-    const { actor } = await requireAuthenticatedContext();
-    await new UserCredentialRepository(getSupabaseServerClient(), actor.userId).remove(parsed.data.provider);
+    const { actor, client } = await requireAuthenticatedContext();
+    const repository = new UserCredentialRepository(getSupabaseServerClient(), actor.userId);
+    await repository.remove(parsed.data.provider);
+    const remaining = await repository.list();
+    const { error: preferenceError } = await client
+      .from("user_onboarding_state")
+      .update({ preferred_ai_provider: remaining[0]?.provider ?? null })
+      .eq("user_id", actor.userId);
+    if (preferenceError) throw preferenceError;
     return Response.json({ ok: true }, { headers: noStore });
   } catch (error) {
     if (error instanceof AuthenticationRequiredError) {
